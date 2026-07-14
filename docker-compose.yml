@@ -1,0 +1,207 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: manuscript_tracker_db
+    environment:
+      POSTGRES_DB: ${DB_NAME:-manuscript_tracker}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres_dev_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init-db.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-manuscript_tracker}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  # Redis Cache & Sessions
+  redis:
+    image: redis:7-alpine
+    container_name: manuscript_tracker_redis
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis_dev_password}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redis_dev_password}", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  # Laravel API Backend
+  laravel:
+    build:
+      context: .
+      dockerfile: docker/laravel-dockerfile
+      target: development
+      args:
+        PHP_VERSION: "8.4"
+    container_name: manuscript_tracker_api
+    environment:
+      APP_NAME: "Manuscript Tracker"
+      APP_ENV: ${APP_ENV:-local}
+      APP_DEBUG: ${APP_DEBUG:-true}
+      APP_KEY: ${APP_KEY:-base64:placeholder_key_change_in_production}
+      APP_URL: http://localhost
+      
+      # Database
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: ${DB_NAME:-manuscript_tracker}
+      DB_USERNAME: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres_dev_password}
+      
+      # Redis
+      CACHE_DRIVER: redis
+      SESSION_DRIVER: redis
+      QUEUE_CONNECTION: redis
+      REDIS_HOST: redis
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_dev_password}
+      REDIS_PORT: 6379
+      
+      # Mail (optional, for notifications)
+      MAIL_DRIVER: log
+      
+      # Trusted Proxies
+      TRUSTED_PROXIES: "nginx"
+    volumes:
+      - ./backend:/app
+      - /app/vendor
+      - /app/node_modules
+      - laravel_logs:/app/storage/logs
+    ports:
+      - "${LARAVEL_PORT:-9000}:9000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  # React Frontend
+  react:
+    build:
+      context: .
+      dockerfile: docker/react-dockerfile
+      target: development
+      args:
+        NODE_ENV: "development"
+    container_name: manuscript_tracker_frontend
+    environment:
+      REACT_APP_API_URL: ${REACT_APP_API_URL:-http://localhost/api}
+      NODE_ENV: ${NODE_ENV:-development}
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "${REACT_PORT:-3000}:3000"
+    networks:
+      - app-network
+    restart: unless-stopped
+    depends_on:
+      - laravel
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: manuscript_tracker_nginx
+    volumes:
+      - ./docker/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/conf.d:/etc/nginx/conf.d:ro
+      - laravel_storage:/app/backend/storage:ro
+    ports:
+      - "${NGINX_PORT:-80}:80"
+    depends_on:
+      - laravel
+      - react
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Adminer - lightweight database UI (phpMyAdmin-style)
+  adminer:
+    image: adminer:latest
+    container_name: manuscript_tracker_adminer
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+      ADMINER_DESIGN: pepa-linha
+    ports:
+      - "${ADMINER_PORT:-8081}:8080"
+    depends_on:
+      - postgres
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  # pgAdmin 4 - full-featured PostgreSQL admin console
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: manuscript_tracker_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@example.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-pgadmin_dev_password}
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+      - ./docker/pgadmin-servers.json:/pgadmin4/servers.json:ro
+    ports:
+      - "${PGADMIN_PORT:-8082}:80"
+    depends_on:
+      - postgres
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  # Redis Commander - lightweight Redis key browser (phpMyAdmin-style)
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: manuscript_tracker_redis_commander
+    environment:
+      # Format: label:host:port:dbIndex:password
+      REDIS_HOSTS: "local:redis:6379:0:${REDIS_PASSWORD:-redis_dev_password}"
+    ports:
+      - "${REDIS_COMMANDER_PORT:-8083}:8081"
+    depends_on:
+      - redis
+    networks:
+      - app-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  laravel_logs:
+    driver: local
+  laravel_storage:
+    driver: local
+  pgadmin_data:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge
