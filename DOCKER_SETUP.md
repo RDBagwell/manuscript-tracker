@@ -88,7 +88,7 @@ That's it! `make dev-setup` does:
 - **Port**: 3000 (internal, proxied via Nginx)
 - **Dev Mode**: Hot reload enabled
 - **Build**: Multi-stage for production optimization
-- **Environment**: `REACT_APP_API_URL=http://localhost/api`
+- **Environment**: `VITE_API_URL=http://localhost/api`
 
 ### Nginx (nginx)
 - **Image**: `nginx:alpine`
@@ -231,7 +231,7 @@ CACHE_DRIVER=redis
 SESSION_DRIVER=redis
 
 # Frontend
-REACT_APP_API_URL=http://localhost/api  # CORS-safe internal URL
+VITE_API_URL=http://localhost/api  # CORS-safe internal URL
 ```
 
 ### Changing Passwords
@@ -454,7 +454,7 @@ docker-compose exec redis redis-cli -a redis_dev_password PING
 
 ### Frontend can't reach API
 - Verify Nginx is routing `/api/*` to Laravel
-- Check `REACT_APP_API_URL` in `.env.docker`
+- Check `VITE_API_URL` in `.env.docker`
 - Ensure Laravel is healthy: `docker-compose exec laravel php artisan --version`
 
 ### Port conflicts

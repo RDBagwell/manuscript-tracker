@@ -153,7 +153,7 @@ cp -r /path/to/existing/react frontend
 
 # Create .env file
 cat > frontend/.env << EOF
-REACT_APP_API_URL=http://localhost/api
+VITE_API_URL=http://localhost/api
 NODE_ENV=development
 EOF
 ```
@@ -193,7 +193,7 @@ Route::get('/health', function () {
 Create `frontend/src/services/api.js`:
 
 ```javascript
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost/api';
+const API_BASE_URL = process.env.VITE_API_URL || 'http://localhost/api';
 
 export const api = {
   async get(endpoint) {
