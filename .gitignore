@@ -1,0 +1,80 @@
+# Docker
+.dockerignore
+docker-compose.override.yml
+.env.local
+.env.*.local
+
+# Environment
+.env
+.env.docker.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+
+# PHP/Laravel
+backend/vendor/
+backend/composer.lock
+backend/.env
+backend/.env.local
+backend/storage/logs/*
+backend/storage/framework/sessions/*
+backend/storage/framework/cache/*
+backend/storage/framework/views/*
+backend/bootstrap/cache/*
+backend/.php_cs.cache
+backend/.phpunit.result.cache
+backend/node_modules/
+backend/npm-debug.log
+backend/yarn-error.log
+
+# Node/React
+frontend/node_modules/
+frontend/npm-debug.log
+frontend/yarn-error.log
+frontend/yarn.lock
+frontend/.env.local
+frontend/build/
+frontend/dist/
+frontend/.next/
+frontend/out/
+
+# Testing
+backend/tests/coverage/
+frontend/coverage/
+
+# Documentation
+docs/
+*.pem
+*.key
+
+# Database
+*.sql
+!docker/init-db.sql
+*.dump
+*.backup
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+.Spotlight-V100
+.Trashes
+
+# System
+.vscode-server/
+.cache/
+
+# Misc
+.editorconfig.local
+*.bak
+*.tmp
