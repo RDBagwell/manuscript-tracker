@@ -1,0 +1,133 @@
+# syntax=docker/dockerfile:1.4
+
+ARG PHP_VERSION=8.4
+
+# ===== BUILD STAGE =====
+FROM php:${PHP_VERSION}-fpm-alpine AS builder
+
+# Install system dependencies. build-base provides the compiler; autoconf is
+# required by phpize (used by `pecl install`). libpq-dev headers build pdo_pgsql.
+RUN apk add --no-cache \
+    build-base \
+    autoconf \
+    libpq-dev \
+    zip \
+    unzip \
+    git \
+    curl \
+    ca-certificates
+
+# Install only the PHP extensions not already bundled in the base image.
+# (pdo, ctype, mbstring, tokenizer, opcache and json ship with php:8.2-alpine.)
+RUN docker-php-ext-install pdo_pgsql bcmath
+
+# Install Redis extension
+RUN pecl install redis && docker-php-ext-enable redis
+
+# Copy Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+WORKDIR /app
+
+# Copy only composer files for better layer caching
+COPY backend/composer.json backend/composer.lock ./
+
+# Install dependencies with optimizations
+RUN composer install \
+    --no-dev \
+    --no-interaction \
+    --prefer-dist \
+    --optimize-autoloader \
+    --no-scripts \
+    --no-progress
+
+# ===== DEVELOPMENT STAGE =====
+FROM php:${PHP_VERSION}-fpm-alpine AS development
+
+# $PHPIZE_DEPS provides the compiler toolchain needed to build PHP extensions;
+# linux-headers is required to build xdebug (rtnetlink.h).
+RUN apk add --no-cache \
+    $PHPIZE_DEPS \
+    linux-headers \
+    libpq-dev \
+    git \
+    curl \
+    ca-certificates \
+    postgresql-client \
+    redis
+
+# Only pdo_pgsql and bcmath need building; the rest ship with the base image
+RUN docker-php-ext-install pdo_pgsql bcmath
+
+RUN pecl install redis xdebug && \
+    docker-php-ext-enable redis xdebug
+
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# PHP config for development
+COPY docker/php/php.ini $PHP_INI_DIR/php.ini
+COPY docker/php/opcache.ini $PHP_INI_DIR/conf.d/10-opcache.ini
+COPY docker/php/xdebug.ini $PHP_INI_DIR/conf.d/20-xdebug.ini
+
+WORKDIR /app
+
+COPY backend/ .
+
+# Install PHP dependencies including dev tools (pail, pint, phpunit) for the
+# development image, and drop any stale cached package manifest copied from the
+# host so Laravel rebuilds it against this vendor directory.
+RUN composer install --no-interaction --prefer-dist --no-progress --no-scripts \
+    && rm -rf bootstrap/cache/*.php
+
+# Create necessary directories
+RUN mkdir -p storage/logs storage/framework/{sessions,views,cache} bootstrap/cache && \
+    chown -R www-data:www-data storage bootstrap/cache
+
+# Copy entrypoint script
+COPY docker/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+EXPOSE 9000
+
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+CMD ["php-fpm"]
+
+# ===== PRODUCTION STAGE =====
+FROM php:${PHP_VERSION}-fpm-alpine AS production
+
+# Runtime libraries only (libpq for pdo_pgsql)
+RUN apk add --no-cache \
+    libpq \
+    ca-certificates \
+    postgresql-client \
+    redis
+
+# Build extensions using throwaway build deps, then remove them to keep the image slim
+RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS libpq-dev \
+    && docker-php-ext-install pdo_pgsql bcmath \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
+    && apk del .build-deps
+
+# Optimized PHP config for production
+COPY docker/php/php.ini $PHP_INI_DIR/php.ini
+COPY docker/php/opcache-prod.ini $PHP_INI_DIR/conf.d/10-opcache.ini
+
+WORKDIR /app
+
+COPY backend/ .
+COPY --from=builder /app/vendor ./vendor
+
+# Remove dev files
+RUN rm -rf .git .github .gitignore tests phpunit.xml
+
+RUN mkdir -p storage/logs storage/framework/{sessions,views,cache} bootstrap/cache && \
+    chown -R www-data:www-data storage bootstrap/cache
+
+COPY docker/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+EXPOSE 9000
+
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+CMD ["php-fpm"]

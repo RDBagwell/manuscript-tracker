@@ -1,0 +1,14 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "Manuscript Tracker",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "manuscript_tracker",
+      "Username": "postgres",
+      "SSLMode": "prefer",
+      "Comment": "Auto-registered by docker/pgadmin-servers.json"
+    }
+  }
+}
