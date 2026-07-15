@@ -89,8 +89,21 @@ tinker:
 	docker-compose exec laravel php artisan tinker
 
 # Testing & Quality
+# Hermetic test env: compose injects app config as real process env (visible
+# in $$_SERVER), which outranks phpunit.xml <env> overrides in Laravel's env
+# reader. Re-injecting at exec time is the only layer that reliably wins —
+# guarantees sqlite :memory: + the CSRF unit-test bypass, and makes it
+# impossible for `make test` to ever touch the dev Postgres data again.
 test:
-	docker-compose exec laravel php artisan test
+	docker-compose exec \
+		-e APP_ENV=testing \
+		-e APP_KEY=base64:Hfz0IWxJPfsqqpIFNCCaeF+2nHaqFXGQxpJtkmT+izs= \
+		-e DB_CONNECTION=sqlite \
+		-e DB_DATABASE=:memory: \
+		-e SESSION_DRIVER=array \
+		-e CACHE_STORE=array \
+		-e QUEUE_CONNECTION=sync \
+		laravel php artisan test
 
 lint:
 	docker-compose exec laravel composer run lint
