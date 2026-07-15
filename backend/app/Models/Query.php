@@ -89,7 +89,7 @@ class Query extends Model
 
         // Keep closed_at in sync with terminal states — and clear it if a
         // later event reopens the thread (e.g. an R&R after a rejection).
-        if ($this->status->isClosed()) {
+        if ($this->status?->isClosed()) {
             $this->closed_at ??= $event->happened_at;
         } else {
             $this->closed_at = null;

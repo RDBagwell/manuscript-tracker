@@ -30,8 +30,11 @@ return new class extends Migration
         });
 
         // GIN index for fast containment queries on genres,
-        // e.g. WHERE genres @> '["literary noir"]'
-        DB::statement('CREATE INDEX agents_genres_gin_index ON agents USING GIN (genres)');
+        // e.g. WHERE genres @> '["literary noir"]'. Postgres-only syntax —
+        // guarded so the sqlite :memory: test database can migrate.
+        if (Schema::getConnection()->getDriverName() === 'pgsql') {
+            DB::statement('CREATE INDEX agents_genres_gin_index ON agents USING GIN (genres)');
+        }
     }
 
     public function down(): void
