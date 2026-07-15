@@ -1,0 +1,4 @@
+# Placeholder so docker/conf.d exists and is mounted read-only into Nginx
+# (docker-compose mounts this into /etc/nginx/conf.d). Drop extra *.conf
+# server/location snippets here; nginx.conf includes them via
+# `include /etc/nginx/conf.d/*.conf;`.
