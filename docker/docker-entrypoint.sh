@@ -43,8 +43,13 @@ fi
 
 echo -e "${GREEN}Redis is ready!${NC}"
 
-# Generate APP_KEY if not set
-if [ -z "$APP_KEY" ] || [ "$APP_KEY" = "base64:placeholder_key_change_in_production" ]; then
+# Ensure backend/.env exists and holds a real APP_KEY. Checked against
+# the file, not process env: compose no longer injects APP_KEY, and a
+# file check means the key survives restarts instead of rotating.
+if [ ! -f /app/.env ]; then
+    cp /app/.env.example /app/.env
+fi
+if ! grep -qE '^APP_KEY=base64:.{40,}' /app/.env; then
     echo -e "${YELLOW}Generating APP_KEY...${NC}"
     php artisan key:generate --force
     echo -e "${GREEN}APP_KEY generated${NC}"
