@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import api from '../services/api'
-import type { Agent, Wrapped } from '../types'
+import AgentForm from '../components/AgentForm'
+import type { Agency, Agent, Wrapped } from '../types'
 
 export default function AgentsPage() {
   const [agents, setAgents] = useState<Agent[]>([])
@@ -9,6 +10,15 @@ export default function AgentsPage() {
   const [applied, setApplied] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [agencies, setAgencies] = useState<Agency[]>([])
+  const [showForm, setShowForm] = useState(false)
+  const [editing, setEditing] = useState<Agent | null>(null)
+
+  useEffect(() => {
+    api.get<Wrapped<Agency[]>>('/agencies')
+      .then((res) => setAgencies(res.data))
+      .catch(() => { /* agent list still works without the picker */ })
+  }, [])
 
   useEffect(() => {
     setLoading(true)
@@ -29,6 +39,12 @@ export default function AgentsPage() {
     <div className="page">
       <div className="page__head">
         <h1 className="page__title">Agents</h1>
+        <button
+          type="button" className="btn btn--primary"
+          onClick={() => { setEditing(null); setShowForm((v) => !v) }}
+        >
+          {showForm && !editing ? 'Close form' : 'Add agent'}
+        </button>
         <form className="filters" onSubmit={handleFilter}>
           <label className="field field--inline">
             <span className="field__label">Genre</span>
@@ -48,6 +64,24 @@ export default function AgentsPage() {
           )}
         </form>
       </div>
+
+      {showForm && (
+        <AgentForm
+          key={editing?.id ?? 'new'}
+          initial={editing ?? undefined}
+          agencies={agencies}
+          onSaved={(agent, newAgency) => {
+            if (newAgency) setAgencies((prev) => [...prev, newAgency])
+            setAgents((prev) =>
+              editing
+                ? prev.map((x) => (x.id === agent.id ? agent : x))
+                : [agent, ...prev])
+            setShowForm(false)
+            setEditing(null)
+          }}
+          onCancel={() => { setShowForm(false); setEditing(null) }}
+        />
+      )}
 
       {error && <p className="form-error" role="alert">{error}</p>}
       {loading && <p className="muted">Pulling the files…</p>}
@@ -83,6 +117,12 @@ export default function AgentsPage() {
             <span className={`badge ${a.open_to_queries ? 'badge--offer' : 'badge--no_response'}`}>
               {a.open_to_queries ? 'Open' : 'Closed'}
             </span>
+            <button
+              type="button" className="btn btn--ghost"
+              onClick={() => { setEditing(a); setShowForm(true); window.scrollTo({ top: 0 }) }}
+            >
+              Edit
+            </button>
           </li>
         ))}
       </ul>

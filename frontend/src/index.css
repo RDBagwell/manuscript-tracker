@@ -247,6 +247,43 @@ button, input, select, textarea { font: inherit; color: inherit; }
   margin-bottom: 18px;
 }
 
+.formgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.form-actions { display: flex; gap: 10px; }
+
+.field__error { color: var(--stamp); font-size: 12px; }
+
+.subpanel {
+  border-left: 3px solid var(--manila);
+  padding: 12px 14px;
+  background: var(--ink);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.btn--danger { color: var(--stamp); }
+
+.btn--danger:hover { color: var(--stamp); border-color: var(--stamp); }
+
+.casefile__foot {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.mscard__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+}
+
 /* ── Warning box: the closed-door advisory ───────────────────────────── */
 .warnbox {
   border: 1px solid var(--manila);
@@ -289,7 +326,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
   color: var(--manila);
 }
 
-.newquery__grid {
+.newquery__grid,
+.formgrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 14px;
@@ -449,7 +487,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 .agentrow {
   display: grid;
-  grid-template-columns: 1.3fr 1.6fr auto auto;
+  grid-template-columns: 1.3fr 1.6fr auto auto auto;
   gap: 14px;
   align-items: center;
   background: var(--desk);

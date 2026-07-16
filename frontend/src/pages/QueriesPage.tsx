@@ -169,6 +169,8 @@ export default function QueriesPage() {
             onToggle={() =>
               setExpandedId((cur) => (cur === q.id ? null : q.id))}
             onUpdated={replaceQuery}
+            onDeleted={(id) =>
+              setQueries((prev) => prev.filter((q) => q.id !== id))}
           />
         ))}
       </ul>
@@ -177,12 +179,13 @@ export default function QueriesPage() {
 }
 
 function QueryRow({
-  query, expanded, onToggle, onUpdated,
+  query, expanded, onToggle, onUpdated, onDeleted,
 }: {
   query: Query
   expanded: boolean
   onToggle: () => void
   onUpdated: (q: Query) => void
+  onDeleted: (id: number) => void
 }) {
   const [full, setFull] = useState<Query | null>(
     query.events ? query : null,
@@ -256,6 +259,24 @@ function QueryRow({
             setFull(q)
             onUpdated(q)
           }} />
+
+          <div className="casefile__foot">
+            <button
+              type="button"
+              className="btn btn--ghost btn--danger"
+              onClick={async () => {
+                const count = detail.events?.length ?? 0
+                const ok = window.confirm(
+                  `Delete this query thread${count ? ` and its ${count} logged event${count === 1 ? '' : 's'}` : ''}? This can't be undone.`,
+                )
+                if (!ok) return
+                await api.delete(`/queries/${query.id}`)
+                onDeleted(query.id)
+              }}
+            >
+              Delete thread
+            </button>
+          </div>
         </div>
       )}
     </li>
