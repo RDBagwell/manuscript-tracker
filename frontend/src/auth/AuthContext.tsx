@@ -14,6 +14,7 @@ interface AuthValue {
     password: string, passwordConfirmation: string,
   ) => Promise<void>
   logout: () => Promise<void>
+  applyUser: (user: User) => void
 }
 
 const AuthContext = createContext<AuthValue | null>(null)
@@ -44,14 +45,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(res.data)
   }, [])
 
+  const applyUser = useCallback((u: User) => setUser(u), [])
+
   const logout = useCallback(async () => {
     await api.post('/auth/logout', {})
     setUser(null)
   }, [])
 
   const value = useMemo(
-    () => ({ user, loading, login, register, logout }),
-    [user, loading, login, register, logout],
+    () => ({ user, loading, login, register, logout, applyUser }),
+    [user, loading, login, register, logout, applyUser],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

@@ -14,12 +14,13 @@ const SUBMISSION_METHODS = [
 const NEW_AGENCY = '__new__'
 
 export default function AgentForm({
-  initial, agencies, onSaved, onCancel,
+  initial, agencies, onSaved, onCancel, onDeleted,
 }: {
   initial?: Agent
   agencies: Agency[]
   onSaved: (agent: Agent, newAgency: Agency | null) => void
   onCancel: () => void
+  onDeleted?: () => void
 }) {
   const [name, setName] = useState(initial?.name ?? '')
   const [agencyId, setAgencyId] = useState(
@@ -238,6 +239,23 @@ export default function AgentForm({
       )}
 
       <div className="form-actions">
+        {initial && onDeleted && (
+          <button
+            type="button"
+            className="btn btn--ghost btn--danger btn--left"
+            onClick={async () => {
+              const n = initial.queries_count ?? 0
+              const ok = window.confirm(
+                `Delete ${initial.name}${n ? ` and the ${n} query thread${n === 1 ? '' : 's'} logged against them` : ''}? This can't be undone.`,
+              )
+              if (!ok) return
+              await api.delete(`/agents/${initial.id}`)
+              onDeleted()
+            }}
+          >
+            Delete agent
+          </button>
+        )}
         <button type="submit" className="btn btn--primary" disabled={busy}>
           {busy ? 'Saving…' : initial ? 'Save changes' : 'Add agent'}
         </button>

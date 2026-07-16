@@ -26,16 +26,20 @@ export default function QueriesPage() {
   const [manuscriptFilter, setManuscriptFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [openOnly, setOpenOnly] = useState(false)
+  const [sort, setSort] = useState('sent_at:desc')
 
   const loadQueries = useCallback(async () => {
     const params = new URLSearchParams()
     if (manuscriptFilter) params.set('manuscript_id', manuscriptFilter)
     if (statusFilter) params.set('status', statusFilter)
     if (openOnly) params.set('open', '1')
+    const [field, dir] = sort.split(':')
+    params.set('sort', field)
+    params.set('dir', dir)
     const qs = params.toString()
     const res = await api.get<Wrapped<Query[]>>(`/queries${qs ? `?${qs}` : ''}`)
     setQueries(res.data)
-  }, [manuscriptFilter, statusFilter, openOnly])
+  }, [manuscriptFilter, statusFilter, openOnly, sort])
 
   useEffect(() => {
     Promise.all([
@@ -147,6 +151,17 @@ export default function QueriesPage() {
             onChange={(e) => setOpenOnly(e.target.checked)}
           />
           <span>Open only</span>
+        </label>
+
+        <label className="field field--inline">
+          <span className="field__label">Sort</span>
+          <select value={sort} onChange={(e) => setSort(e.target.value)}>
+            <option value="sent_at:desc">Newest sent</option>
+            <option value="sent_at:asc">Longest out</option>
+            <option value="wave:asc">By wave</option>
+            <option value="status:asc">By status</option>
+            <option value="created_at:desc">Recently logged</option>
+          </select>
         </label>
       </div>
 

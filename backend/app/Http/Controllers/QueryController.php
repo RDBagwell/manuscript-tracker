@@ -15,6 +15,8 @@ use Illuminate\Http\Response;
 
 class QueryController extends Controller
 {
+    use \App\Http\Controllers\Concerns\AppliesSorting;
+
     public function index(Request $request): AnonymousResourceCollection
     {
         $queries = $request->user()->queries()
@@ -30,11 +32,16 @@ class QueryController extends Controller
             ->when(
                 $request->boolean('open'),
                 fn ($q) => $q->whereNull('closed_at'),
-            )
-            ->latest('sent_at')
-            ->get();
+            );
 
-        return QueryResource::collection($queries);
+        $sorted = $this->applySort(
+            $queries,
+            $request,
+            ['sent_at', 'status', 'wave', 'created_at'],
+            'sent_at',
+        )->get();
+
+        return QueryResource::collection($sorted);
     }
 
     public function store(StoreQueryRequest $request): JsonResponse

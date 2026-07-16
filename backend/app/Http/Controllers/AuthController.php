@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Requests\UpdateProfileRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
@@ -57,5 +58,21 @@ class AuthController extends Controller
     public function user(Request $request): UserResource
     {
         return UserResource::make($request->user());
+    }
+
+    public function update(UpdateProfileRequest $request): UserResource
+    {
+        $user = $request->user();
+
+        $user->fill($request->safe()->only(['name', 'email']));
+
+        if ($request->filled('password')) {
+            // The 'hashed' cast on User handles the hashing.
+            $user->password = $request->string('password');
+        }
+
+        $user->save();
+
+        return UserResource::make($user);
     }
 }

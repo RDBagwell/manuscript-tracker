@@ -23,6 +23,7 @@ class AgentResource extends JsonResource
             'response_window_days' => $this->response_window_days,
             'links' => $this->links,
             'notes' => $this->notes,
+            'queries_count' => $this->whenCounted('queries'),
             'agency' => new AgencyResource($this->whenLoaded('agency')),
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),

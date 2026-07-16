@@ -14,7 +14,7 @@ export default function Layout() {
           <NavLink to="/agents">Agents</NavLink>
         </nav>
         <div className="topbar__user">
-          <span className="topbar__name">{user?.name}</span>
+          <NavLink to="/profile" className="topbar__name">{user?.name}</NavLink>
           <button type="button" className="btn btn--ghost" onClick={() => logout()}>
             Sign out
           </button>

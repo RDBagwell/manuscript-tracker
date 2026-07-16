@@ -18,6 +18,7 @@ class ManuscriptResource extends JsonResource
             'status' => $this->status->value,
             'pitch' => $this->pitch,
             'notes' => $this->notes,
+            'queries_count' => $this->whenCounted('queries'),
             'queries' => QueryResource::collection($this->whenLoaded('queries')),
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),

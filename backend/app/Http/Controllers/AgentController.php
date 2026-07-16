@@ -13,14 +13,17 @@ use Illuminate\Http\Response;
 
 class AgentController extends Controller
 {
+    use \App\Http\Controllers\Concerns\AppliesSorting;
+
     /**
      * Supports ?genre=noir filtering — jsonb containment (GIN-indexed on
      * Postgres) via whereJsonContains, which degrades gracefully on sqlite.
      */
     public function index(Request $request): AnonymousResourceCollection
     {
-        $agents = $request->user()->agents()
+        $query = $request->user()->agents()
             ->with('agency')
+            ->withCount('queries')
             ->when(
                 $request->query('genre'),
                 fn ($query, $genre) => $query->whereJsonContains('genres', $genre),
@@ -28,9 +31,15 @@ class AgentController extends Controller
             ->when(
                 $request->has('open'),
                 fn ($query) => $query->where('open_to_queries', $request->boolean('open')),
-            )
-            ->orderBy('name')
-            ->get();
+            );
+
+        $agents = $this->applySort(
+            $query,
+            $request,
+            ['name', 'response_window_days', 'open_to_queries', 'created_at'],
+            'name',
+            'asc',
+        )->get();
 
         return AgentResource::collection($agents);
     }

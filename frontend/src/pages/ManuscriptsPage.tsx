@@ -10,24 +10,38 @@ export default function ManuscriptsPage() {
   const [error, setError] = useState<string | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<Manuscript | null>(null)
+  const [sort, setSort] = useState('created_at:desc')
 
   useEffect(() => {
-    api.get<Wrapped<Manuscript[]>>('/manuscripts')
+    setLoading(true)
+    const [field, dir] = sort.split(':')
+    api.get<Wrapped<Manuscript[]>>(`/manuscripts?sort=${field}&dir=${dir}`)
       .then((res) => setManuscripts(res.data))
       .catch(() => setError('Could not load manuscripts.'))
       .finally(() => setLoading(false))
-  }, [])
+  }, [sort])
 
   return (
     <div className="page">
       <div className="page__head">
         <h1 className="page__title">Manuscripts</h1>
-        <button
-          type="button" className="btn btn--primary"
-          onClick={() => { setEditing(null); setShowForm((v) => !v) }}
-        >
-          {showForm && !editing ? 'Close form' : 'Add manuscript'}
-        </button>
+        <div className="filters">
+          <label className="field field--inline">
+            <span className="field__label">Sort</span>
+            <select value={sort} onChange={(e) => setSort(e.target.value)}>
+              <option value="created_at:desc">Newest first</option>
+              <option value="title:asc">Title A–Z</option>
+              <option value="word_count:desc">Longest first</option>
+              <option value="status:asc">By status</option>
+            </select>
+          </label>
+          <button
+            type="button" className="btn btn--primary"
+            onClick={() => { setEditing(null); setShowForm((v) => !v) }}
+          >
+            {showForm && !editing ? 'Close form' : 'Add manuscript'}
+          </button>
+        </div>
       </div>
 
       {showForm && (
@@ -43,6 +57,11 @@ export default function ManuscriptsPage() {
             setEditing(null)
           }}
           onCancel={() => { setShowForm(false); setEditing(null) }}
+          onDeleted={() => {
+            setManuscripts((prev) => prev.filter((x) => x.id !== editing?.id))
+            setShowForm(false)
+            setEditing(null)
+          }}
         />
       )}
 
@@ -69,6 +88,11 @@ export default function ManuscriptsPage() {
               {m.genre ?? 'Genre unset'}
               {m.word_count !== null && (
                 <span className="thread__mono"> · {m.word_count.toLocaleString()} words</span>
+              )}
+              {typeof m.queries_count === 'number' && (
+                <span className="thread__mono">
+                  {' '}· {m.queries_count} {m.queries_count === 1 ? 'query' : 'queries'}
+                </span>
               )}
             </p>
             <span className={`badge badge--ms-${m.status}`}>

@@ -269,6 +269,23 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 .btn--danger { color: var(--stamp); }
 
+.btn--left { margin-right: auto; }
+
+.notice { color: var(--grass); font-size: 14px; margin: 0; }
+
+.page--narrow { max-width: 560px; }
+
+.page--narrow .panel { margin-bottom: 18px; }
+
+a.topbar__name {
+  color: var(--faded);
+  font-size: 14px;
+  text-decoration: none;
+}
+
+a.topbar__name:hover,
+a.topbar__name.active { color: var(--manila); }
+
 .btn--danger:hover { color: var(--stamp); border-color: var(--stamp); }
 
 .casefile__foot {

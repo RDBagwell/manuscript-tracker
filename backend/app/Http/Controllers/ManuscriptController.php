@@ -13,11 +13,18 @@ use Illuminate\Http\Response;
 
 class ManuscriptController extends Controller
 {
+    use \App\Http\Controllers\Concerns\AppliesSorting;
+
     public function index(Request $request): AnonymousResourceCollection
     {
-        return ManuscriptResource::collection(
-            $request->user()->manuscripts()->latest()->get(),
-        );
+        $manuscripts = $this->applySort(
+            $request->user()->manuscripts()->withCount('queries'),
+            $request,
+            ['title', 'word_count', 'status', 'created_at'],
+            'created_at',
+        )->get();
+
+        return ManuscriptResource::collection($manuscripts);
     }
 
     public function store(StoreManuscriptRequest $request): JsonResponse

@@ -13,11 +13,12 @@ const CATEGORIES = [
 ]
 
 export default function ManuscriptForm({
-  initial, onSaved, onCancel,
+  initial, onSaved, onCancel, onDeleted,
 }: {
   initial?: Manuscript
   onSaved: (m: Manuscript) => void
   onCancel: () => void
+  onDeleted?: () => void
 }) {
   const [title, setTitle] = useState(initial?.title ?? '')
   const [genre, setGenre] = useState(initial?.genre ?? '')
@@ -135,6 +136,23 @@ export default function ManuscriptForm({
       )}
 
       <div className="form-actions">
+        {initial && onDeleted && (
+          <button
+            type="button"
+            className="btn btn--ghost btn--danger btn--left"
+            onClick={async () => {
+              const n = initial.queries_count ?? 0
+              const ok = window.confirm(
+                `Delete “${initial.title}”${n ? ` and its ${n} query thread${n === 1 ? '' : 's'}` : ''}? This can't be undone.`,
+              )
+              if (!ok) return
+              await api.delete(`/manuscripts/${initial.id}`)
+              onDeleted()
+            }}
+          >
+            Delete manuscript
+          </button>
+        )}
         <button type="submit" className="btn btn--primary" disabled={busy}>
           {busy ? 'Saving…' : initial ? 'Save changes' : 'Add manuscript'}
         </button>

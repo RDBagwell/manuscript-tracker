@@ -82,4 +82,18 @@ class ManuscriptApiTest extends TestCase
         $this->deleteJson("/api/manuscripts/{$manuscript->id}")->assertNoContent();
         $this->assertDatabaseMissing('manuscripts', ['id' => $manuscript->id]);
     }
+
+    public function test_index_sorts_by_title_when_requested(): void
+    {
+        $me = User::factory()->create();
+        Sanctum::actingAs($me);
+
+        Manuscript::factory()->for($me)->create(['title' => 'Zeta Protocol']);
+        Manuscript::factory()->for($me)->create(['title' => 'Alpha Wake']);
+
+        $this->getJson('/api/manuscripts?sort=title&dir=asc')
+            ->assertOk()
+            ->assertJsonPath('data.0.title', 'Alpha Wake')
+            ->assertJsonPath('data.1.title', 'Zeta Protocol');
+    }
 }

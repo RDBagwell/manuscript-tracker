@@ -25,6 +25,7 @@ export interface Manuscript {
   status: ManuscriptStatus
   pitch: string | null
   notes: string | null
+  queries_count?: number
 }
 
 export interface Agency {
@@ -47,6 +48,7 @@ export interface Agent {
   submission_method: string | null
   response_window_days: number | null
   notes: string | null
+  queries_count?: number
   agency?: Agency
 }
 

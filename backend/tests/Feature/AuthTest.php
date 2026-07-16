@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class AuthTest extends TestCase
@@ -89,5 +90,67 @@ class AuthTest extends TestCase
             ->assertNoContent();
 
         $this->assertGuest('web');
+    }
+
+    public function test_profile_update_changes_name_and_email(): void
+    {
+        $user = User::factory()->create();
+
+        $this->postJson('/api/auth/login', [
+            'email' => $user->email, 'password' => 'password',
+        ])->assertOk();
+
+        $this->putJson('/api/auth/user', [
+            'name' => 'Renamed Author',
+            'email' => 'renamed@example.test',
+        ])->assertOk()->assertJsonPath('data.name', 'Renamed Author');
+
+        $this->assertSame('renamed@example.test', $user->fresh()->email);
+    }
+
+    public function test_profile_email_must_stay_unique(): void
+    {
+        User::factory()->create(['email' => 'taken@example.test']);
+        $user = User::factory()->create();
+
+        $this->postJson('/api/auth/login', [
+            'email' => $user->email, 'password' => 'password',
+        ]);
+
+        $this->putJson('/api/auth/user', ['email' => 'taken@example.test'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('email');
+    }
+
+    public function test_password_change_requires_current_password(): void
+    {
+        $user = User::factory()->create();
+
+        $this->postJson('/api/auth/login', [
+            'email' => $user->email, 'password' => 'password',
+        ]);
+
+        $this->putJson('/api/auth/user', [
+            'current_password' => 'not-the-password',
+            'password' => 'a-new-strong-password',
+            'password_confirmation' => 'a-new-strong-password',
+        ])->assertUnprocessable()->assertJsonValidationErrors('current_password');
+    }
+
+    public function test_password_change_succeeds_with_current_password(): void
+    {
+        $user = User::factory()->create();
+
+        $this->postJson('/api/auth/login', [
+            'email' => $user->email, 'password' => 'password',
+        ]);
+
+        $this->putJson('/api/auth/user', [
+            'current_password' => 'password',
+            'password' => 'a-new-strong-password',
+            'password_confirmation' => 'a-new-strong-password',
+        ])->assertOk();
+
+        $this->assertTrue(Hash::check('a-new-strong-password', $user->fresh()->password));
     }
 }

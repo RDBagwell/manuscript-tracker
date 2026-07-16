@@ -13,6 +13,7 @@ export default function AgentsPage() {
   const [agencies, setAgencies] = useState<Agency[]>([])
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<Agent | null>(null)
+  const [sort, setSort] = useState('name:asc')
 
   useEffect(() => {
     api.get<Wrapped<Agency[]>>('/agencies')
@@ -23,12 +24,14 @@ export default function AgentsPage() {
   useEffect(() => {
     setLoading(true)
     setError(null)
-    const qs = applied ? `?genre=${encodeURIComponent(applied)}` : ''
-    api.get<Wrapped<Agent[]>>(`/agents${qs}`)
+    const [field, dir] = sort.split(':')
+    const params = new URLSearchParams({ sort: field, dir })
+    if (applied) params.set('genre', applied)
+    api.get<Wrapped<Agent[]>>(`/agents?${params}`)
       .then((res) => setAgents(res.data))
       .catch(() => setError('Could not load agents.'))
       .finally(() => setLoading(false))
-  }, [applied])
+  }, [applied, sort])
 
   function handleFilter(e: FormEvent) {
     e.preventDefault()
@@ -54,6 +57,15 @@ export default function AgentsPage() {
             />
           </label>
           <button type="submit" className="btn">Filter</button>
+          <label className="field field--inline">
+            <span className="field__label">Sort</span>
+            <select value={sort} onChange={(e) => setSort(e.target.value)}>
+              <option value="name:asc">Name A–Z</option>
+              <option value="response_window_days:asc">Fastest response</option>
+              <option value="open_to_queries:desc">Open first</option>
+              <option value="created_at:desc">Recently added</option>
+            </select>
+          </label>
           {applied && (
             <button
               type="button" className="btn btn--ghost"
@@ -80,6 +92,11 @@ export default function AgentsPage() {
             setEditing(null)
           }}
           onCancel={() => { setShowForm(false); setEditing(null) }}
+          onDeleted={() => {
+            setAgents((prev) => prev.filter((x) => x.id !== editing?.id))
+            setShowForm(false)
+            setEditing(null)
+          }}
         />
       )}
 
