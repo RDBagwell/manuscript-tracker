@@ -15,6 +15,13 @@ export default defineConfig({
     watch: {
       usePolling: true,
     },
+    // Direct :3000 access (bypassing nginx) stays same-origin too: the dev
+    // server proxies API paths to the nginx container. Host-machine Vite
+    // (outside Docker) won't resolve 'nginx' — use the nginx port instead.
+    proxy: {
+      '/api': { target: 'http://nginx' },
+      '/sanctum': { target: 'http://nginx' },
+    },
   },
   preview: {
     port: 3000,
