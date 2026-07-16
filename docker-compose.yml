@@ -54,7 +54,10 @@ services:
       APP_NAME: "Manuscript Tracker"
       APP_ENV: ${APP_ENV:-local}
       APP_DEBUG: ${APP_DEBUG:-true}
-      APP_URL: http://localhost
+      APP_URL: http://localhost:${NGINX_PORT:-80}
+      # Session auth only works for origins Sanctum considers first-party.
+      # Tracks NGINX_PORT so a nonstandard port (e.g. 83) just works.
+      SANCTUM_STATEFUL_DOMAINS: localhost,localhost:${NGINX_PORT:-80},localhost:3000,127.0.0.1,127.0.0.1:${NGINX_PORT:-80}
       
       # Database
       DB_CONNECTION: pgsql
@@ -103,7 +106,9 @@ services:
         NODE_ENV: "development"
     container_name: manuscript_tracker_frontend
     environment:
-      VITE_API_URL: ${VITE_API_URL:-http://localhost/api}
+      # Empty default = the client uses relative /api and inherits the
+      # page origin (any nginx port). Set only for true cross-origin setups.
+      VITE_API_URL: ${VITE_API_URL:-}
       NODE_ENV: ${NODE_ENV:-development}
     volumes:
       - ./frontend:/app
