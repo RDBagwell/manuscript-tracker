@@ -100,6 +100,19 @@ export const EVENT_TYPE_LABELS: Record<QueryEventType, string> = {
   withdrawn: 'Withdrawn',
 }
 
+export const MANUSCRIPT_CATEGORY_LABELS: Record<string, string> = {
+  adult: 'Adult',
+  young_adult: 'Young Adult',
+  middle_grade: 'Middle Grade',
+}
+
+export const SUBMISSION_METHOD_LABELS: Record<string, string> = {
+  query_manager: 'QueryManager',
+  email: 'Email',
+  form: 'Website form',
+  other: 'Other',
+}
+
 export const MANUSCRIPT_STATUS_LABELS: Record<ManuscriptStatus, string> = {
   drafting: 'Drafting',
   querying: 'Querying',
