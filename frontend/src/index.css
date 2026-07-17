@@ -594,6 +594,114 @@ a.topbar__name.active { color: var(--manila); }
   padding: 2px 9px;
 }
 
+/* ── Stats ───────────────────────────────────────────────────────────── */
+.statcard {
+  background: var(--desk);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 20px;
+  margin-bottom: 18px;
+}
+
+.statcard__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.statcard__title { font-family: var(--display); font-size: 19px; }
+
+.statbar {
+  display: flex;
+  height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--ink);
+}
+
+.statbar__seg { display: block; }
+.statbar__seg--queued { background: #565043; }
+.statbar__seg--sent { background: var(--inkblue); }
+.statbar__seg--partial { background: var(--manila); }
+.statbar__seg--full { background: var(--manila); filter: brightness(1.2); }
+.statbar__seg--revise_resubmit { background: var(--manila); filter: brightness(0.85); }
+.statbar__seg--offer { background: var(--grass); }
+.statbar__seg--rejected { background: var(--stamp); }
+.statbar__seg--no_response { background: #4b453a; }
+.statbar__seg--withdrawn { background: #4b453a; }
+
+.statlegend {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 8px 0 4px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--faded);
+}
+
+.statlegend__item { display: inline-flex; align-items: center; gap: 5px; }
+
+.statlegend__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+}
+
+.statnums {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+  margin: 14px 0 0;
+}
+
+.statnums dt {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--faded);
+}
+
+.statnums dd {
+  margin: 2px 0 0;
+  font-family: var(--mono);
+  font-size: 17px;
+}
+
+.waitlist { margin-top: 16px; }
+
+.waitrow {
+  display: grid;
+  grid-template-columns: 160px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 4px 0;
+  font-size: 13px;
+}
+
+.waitrow__track {
+  height: 6px;
+  background: var(--ink);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.waitrow__fill {
+  display: block;
+  height: 100%;
+  background: var(--manila);
+  border-radius: 999px;
+}
+
+@media (max-width: 760px) {
+  .waitrow { grid-template-columns: 1fr auto; }
+  .waitrow__track { grid-column: 1 / -1; }
+}
+
 /* ── Toasts ──────────────────────────────────────────────────────────── */
 .toasts {
   position: fixed;

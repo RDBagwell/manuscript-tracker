@@ -9,6 +9,7 @@ import ProfilePage from './pages/ProfilePage'
 import QueriesPage from './pages/QueriesPage'
 import RegisterPage from './pages/RegisterPage'
 import RemindersPage from './pages/RemindersPage'
+import StatsPage from './pages/StatsPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 
 export default function App() {
@@ -26,6 +27,7 @@ export default function App() {
           <Route path="/manuscripts" element={<ManuscriptsPage />} />
           <Route path="/agents" element={<AgentsPage />} />
           <Route path="/reminders" element={<RemindersPage />} />
+          <Route path="/stats" element={<StatsPage />} />
           <Route path="/profile" element={<ProfilePage />} />
         </Route>
       </Route>
