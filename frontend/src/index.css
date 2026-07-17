@@ -88,6 +88,16 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 .auth__alt { margin: 4px 0 0; font-size: 14px; color: var(--faded); }
 
+.auth__forgot {
+  align-self: flex-end;
+  margin-top: -8px;
+  font-size: 13px;
+  color: var(--faded);
+  text-decoration: none;
+}
+
+.auth__forgot:hover { color: var(--manila); text-decoration: underline; }
+
 /* ── Shell ───────────────────────────────────────────────────────────── */
 .shell { min-height: 100vh; }
 

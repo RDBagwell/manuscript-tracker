@@ -60,6 +60,10 @@ export default function LoginPage() {
           />
         </label>
 
+        <Link to="/forgot-password" className="auth__forgot">
+          Forgot password?
+        </Link>
+
         <button type="submit" className="btn btn--primary" disabled={busy}>
           {busy ? 'Signing in…' : 'Sign in'}
         </button>

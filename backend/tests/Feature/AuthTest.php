@@ -4,7 +4,9 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class AuthTest extends TestCase
@@ -152,5 +154,60 @@ class AuthTest extends TestCase
         ])->assertOk();
 
         $this->assertTrue(Hash::check('a-new-strong-password', $user->fresh()->password));
+    }
+
+    public function test_forgot_password_sends_a_reset_link(): void
+    {
+        Notification::fake();
+        $user = User::factory()->create();
+
+        $this->postJson('/api/auth/forgot-password', ['email' => $user->email])
+            ->assertOk();
+
+        Notification::assertSentTo($user, ResetPassword::class);
+    }
+
+    public function test_forgot_password_is_uniform_for_unknown_emails(): void
+    {
+        Notification::fake();
+
+        $this->postJson('/api/auth/forgot-password', ['email' => 'ghost@example.test'])
+            ->assertOk();
+
+        Notification::assertNothingSent();
+    }
+
+    public function test_password_can_be_reset_with_a_valid_token(): void
+    {
+        Notification::fake();
+        $user = User::factory()->create();
+
+        $this->postJson('/api/auth/forgot-password', ['email' => $user->email]);
+
+        Notification::assertSentTo($user, ResetPassword::class,
+            function (ResetPassword $notification) use ($user): bool {
+                $this->postJson('/api/auth/reset-password', [
+                    'token' => $notification->token,
+                    'email' => $user->email,
+                    'password' => 'a-brand-new-password',
+                    'password_confirmation' => 'a-brand-new-password',
+                ])->assertOk();
+
+                return true;
+            });
+
+        $this->assertTrue(Hash::check('a-brand-new-password', $user->fresh()->password));
+    }
+
+    public function test_reset_fails_with_an_invalid_token(): void
+    {
+        $user = User::factory()->create();
+
+        $this->postJson('/api/auth/reset-password', [
+            'token' => 'not-a-real-token',
+            'email' => $user->email,
+            'password' => 'whatever-strong-1',
+            'password_confirmation' => 'whatever-strong-1',
+        ])->assertUnprocessable()->assertJsonValidationErrors('email');
     }
 }

@@ -41,6 +41,22 @@ services:
       - app-network
     restart: unless-stopped
 
+  # Mailpit — dev mailbox. Catches all outgoing mail; UI at :8025.
+  # Production swaps MAIL_* env to a real provider; nothing else changes.
+  mailpit:
+    image: axllent/mailpit:v1.20
+    container_name: manuscript_tracker_mailpit
+    ports:
+      - "${MAILPIT_UI_PORT:-8025}:8025"
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+    restart: unless-stopped
+
   # Laravel API Backend
   laravel:
     build:
@@ -76,7 +92,11 @@ services:
       REDIS_PORT: 6379
       
       # Mail (optional, for notifications)
-      MAIL_DRIVER: log
+      MAIL_MAILER: ${MAIL_MAILER:-smtp}
+      MAIL_HOST: ${MAIL_HOST:-mailpit}
+      MAIL_PORT: ${MAIL_PORT:-1025}
+      MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-noreply@manuscripttracker.local}
+      MAIL_FROM_NAME: "Manuscript Tracker"
       
       # Trusted Proxies
       TRUSTED_PROXIES: "nginx"
