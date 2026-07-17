@@ -9,10 +9,10 @@ Built by a novelist actively in the query trenches, as both a daily-use
 tool and a working demonstration of production Laravel + React practice.
 The seed data is a real querying wave.
 
-<!-- SCREENSHOTS — capture, drop in docs/screenshots/, then uncomment:
+SCREENSHOTS — capture, drop in docs/screenshots/, then uncomment:
 ![The query ledger — threads with an expanded correspondence log](docs/screenshots/queries.png)
 ![Reminders — due and upcoming nudges](docs/screenshots/reminders.png)
--->
+
 *Screenshots landing shortly.*
 
 ## Why this exists
