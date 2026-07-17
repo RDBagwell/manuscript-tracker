@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import api, { ApiError } from '../services/api'
+import { useToast } from '../components/Toasts'
 import { formatDate } from '../types'
 import type { Agent, Manuscript, Query, Reminder, Wrapped } from '../types'
 
@@ -171,6 +172,7 @@ function ReminderRow({
   onRemoved: (id: number) => void
 }) {
   const [busy, setBusy] = useState(false)
+  const toast = useToast()
 
   const dueLabel = reminder.completed_at
     ? `done ${formatDate(reminder.completed_at)}`
@@ -187,6 +189,7 @@ function ReminderRow({
         `/reminders/${reminder.id}/complete`, {},
       )
       onChanged(res.data)
+      toast(`Done: ${reminder.reason}`)
     } finally {
       setBusy(false)
     }
@@ -200,6 +203,7 @@ function ReminderRow({
         due_at: new Date(base + 7 * 86400_000).toISOString(),
       })
       onChanged(res.data)
+      toast(`Snoozed — now due ${formatDate(res.data.due_at)}`)
     } finally {
       setBusy(false)
     }
@@ -209,6 +213,7 @@ function ReminderRow({
     if (!window.confirm(`Delete reminder "${reminder.reason}"?`)) return
     await api.delete(`/reminders/${reminder.id}`)
     onRemoved(reminder.id)
+    toast('Reminder deleted')
   }
 
   return (
