@@ -50,7 +50,6 @@ backend/tests/coverage/
 frontend/coverage/
 
 # Documentation
-docs/
 *.pem
 *.key
 
