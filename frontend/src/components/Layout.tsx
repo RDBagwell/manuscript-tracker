@@ -26,6 +26,7 @@ export default function Layout() {
             Reminders
             {dueCount > 0 && <span className="navdot">{dueCount}</span>}
           </NavLink>
+          <NavLink to="/stats">Stats</NavLink>
         </nav>
         <div className="topbar__user">
           <NavLink to="/profile" className="topbar__name">{user?.name}</NavLink>

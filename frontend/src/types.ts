@@ -136,6 +136,37 @@ export interface Reminder {
   completed_at: string | null
 }
 
+export interface StatBlock {
+  totals: { threads: number; sent: number; open: number }
+  outcomes: {
+    requests: number
+    offers: number
+    rejections: number
+    no_response: number
+  }
+  rates: { request_rate: number | null; response_rate: number | null }
+  latency: {
+    avg_days_to_first_response: number | null
+    avg_days_to_rejection: number | null
+  }
+  status_counts: Partial<Record<QueryStatus, number>>
+  open_threads: { agent: string; days: number }[]
+}
+
+export interface ManuscriptStats extends StatBlock {
+  id: number
+  title: string
+  status: ManuscriptStatus
+}
+
+export interface StatsResponse {
+  data: {
+    generated_at: string
+    overall: StatBlock
+    manuscripts: ManuscriptStats[]
+  }
+}
+
 export interface Wrapped<T> {
   data: T
 }
