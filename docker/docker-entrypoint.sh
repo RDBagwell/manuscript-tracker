@@ -43,6 +43,15 @@ fi
 
 echo -e "${GREEN}Redis is ready!${NC}"
 
+# Storage skeleton + permissions. Blade's first-ever view render (the
+# password-reset email) needs storage/framework/views to exist and be
+# writable; the git transplant once left this tree partial. Idempotent.
+mkdir -p storage/framework/cache/data storage/framework/sessions \
+         storage/framework/testing storage/framework/views \
+         storage/logs bootstrap/cache
+chmod -R 775 storage bootstrap/cache
+chown -R www-data:www-data storage bootstrap/cache
+
 # Ensure backend/.env exists and holds a real APP_KEY. Checked against
 # the file, not process env: compose no longer injects APP_KEY, and a
 # file check means the key survives restarts instead of rotating.

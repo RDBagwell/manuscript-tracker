@@ -1,4 +1,4 @@
-.PHONY: help build up down logs clean restart shell artisan test lint format seed
+.PHONY: frontend-rebuild help build up down logs clean restart shell artisan test lint format seed
 
 help:
 	@echo "Manuscript Tracker - Docker Commands"
@@ -121,6 +121,14 @@ redis-cli:
 # React commands
 npm-install:
 	docker-compose exec react npm install
+
+# Rebuild the react image and mint a fresh node_modules volume from it.
+# Needed whenever a patch touches frontend/package.json: down/up cycles
+# discard anonymous volumes and reseed them from the image, so a stale
+# image quietly resurrects old node_modules.
+frontend-rebuild:
+	docker-compose build react
+	docker-compose up -d --force-recreate --renew-anon-volumes react
 
 npm-build:
 	docker-compose exec react npm run build

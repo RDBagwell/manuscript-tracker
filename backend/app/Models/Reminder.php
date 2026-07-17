@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use App\Models\Agent;
+use App\Models\Manuscript;
+use App\Models\Query;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -53,5 +56,31 @@ class Reminder extends Model
     public function complete(): void
     {
         $this->update(['completed_at' => now()]);
+    }
+
+    /**
+     * Human label for whatever this reminder points at.
+     * A query reads as "Manuscript → Agent" — the thread, not the row.
+     */
+    public function targetLabel(): string
+    {
+        $target = $this->remindable;
+
+        return match (true) {
+            $target instanceof Query => sprintf(
+                '%s → %s',
+                $target->manuscript?->title ?? 'Manuscript',
+                $target->agent?->name ?? 'Agent',
+            ),
+            $target instanceof Manuscript => $target->title,
+            $target instanceof Agent => $target->name,
+            default => '—',
+        };
+    }
+
+    public function isDue(): bool
+    {
+        return $this->completed_at === null
+            && $this->due_at->lte(now()->endOfDay());
     }
 }

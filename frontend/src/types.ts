@@ -123,6 +123,19 @@ export const MANUSCRIPT_STATUS_LABELS: Record<ManuscriptStatus, string> = {
   shelved: 'Shelved',
 }
 
+export interface Reminder {
+  id: number
+  remindable_type: 'query' | 'manuscript' | 'agent'
+  remindable_id: number
+  target: string
+  due_at: string
+  due_in_days: number
+  is_due: boolean
+  reason: string
+  notes: string | null
+  completed_at: string | null
+}
+
 export interface Wrapped<T> {
   data: T
 }
