@@ -123,6 +123,25 @@ export const MANUSCRIPT_STATUS_LABELS: Record<ManuscriptStatus, string> = {
   shelved: 'Shelved',
 }
 
+export type TemplateType = 'query_letter' | 'synopsis' | 'bio'
+
+export const TEMPLATE_TYPE_LABELS: Record<TemplateType, string> = {
+  query_letter: 'Query letter',
+  synopsis: 'Synopsis',
+  bio: 'Bio',
+}
+
+export interface Template {
+  id: number
+  manuscript_id: number | null
+  type: TemplateType
+  type_label: string
+  name: string
+  body: string
+  manuscript?: { id: number; title: string }
+  updated_at: string | null
+}
+
 export interface Reminder {
   id: number
   remindable_type: 'query' | 'manuscript' | 'agent'

@@ -594,6 +594,23 @@ a.topbar__name.active { color: var(--manila); }
   padding: 2px 9px;
 }
 
+/* ── Templates ───────────────────────────────────────────────────────── */
+.templateform { display: flex; flex-direction: column; gap: 14px; }
+
+.templatebody {
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.7;
+  resize: vertical;
+}
+
+.templatecount {
+  align-self: flex-end;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--faded);
+}
+
 /* ── Stats ───────────────────────────────────────────────────────────── */
 .statcard {
   background: var(--desk);

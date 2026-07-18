@@ -22,6 +22,7 @@ export default function Layout() {
           <NavLink to="/queries">Queries</NavLink>
           <NavLink to="/manuscripts">Manuscripts</NavLink>
           <NavLink to="/agents">Agents</NavLink>
+          <NavLink to="/templates">Templates</NavLink>
           <NavLink to="/reminders">
             Reminders
             {dueCount > 0 && <span className="navdot">{dueCount}</span>}
