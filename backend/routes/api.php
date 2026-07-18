@@ -8,6 +8,7 @@ use App\Http\Controllers\QueryController;
 use App\Http\Controllers\QueryEventController;
 use App\Http\Controllers\ReminderController;
 use App\Http\Controllers\StatsController;
+use App\Http\Controllers\TemplateController;
 use Illuminate\Support\Facades\Route;
 
 // Container health probe (nginx/compose) — intentionally unauthenticated.
@@ -41,6 +42,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/stats', StatsController::class)->name('stats');
 
+    Route::apiResource('templates', TemplateController::class)->except(['show']);
     Route::apiResource('reminders', ReminderController::class)->except(['show']);
     Route::post('/reminders/{reminder}/complete', [ReminderController::class, 'complete'])
         ->name('reminders.complete');
