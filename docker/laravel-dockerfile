@@ -117,6 +117,7 @@ WORKDIR /app
 
 COPY backend/ .
 COPY --from=builder /app/vendor ./vendor
+RUN rm -f bootstrap/cache/*.php
 
 # Remove dev files
 RUN rm -rf .git .github .gitignore tests phpunit.xml

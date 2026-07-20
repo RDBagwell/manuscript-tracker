@@ -3,6 +3,7 @@
 use App\Http\Controllers\AgencyController;
 use App\Http\Controllers\AgentController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ExportController;
 use App\Http\Controllers\ManuscriptController;
 use App\Http\Controllers\QueryController;
 use App\Http\Controllers\QueryEventController;
@@ -41,6 +42,7 @@ Route::middleware('auth:sanctum')->group(function () {
         ->name('queries.events.store');
 
     Route::get('/stats', StatsController::class)->name('stats');
+    Route::get('/export/queries.csv', [ExportController::class, 'queries'])->name('export.queries');
 
     Route::apiResource('templates', TemplateController::class)->except(['show']);
     Route::apiResource('reminders', ReminderController::class)->except(['show']);

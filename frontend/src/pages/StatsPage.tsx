@@ -30,6 +30,7 @@ export default function StatsPage() {
     <div className="page">
       <div className="page__head">
         <h1 className="page__title">Stats</h1>
+        <a className="btn" href="/api/export/queries.csv">Export CSV</a>
       </div>
 
       {error && <p className="form-error" role="alert">{error}</p>}
