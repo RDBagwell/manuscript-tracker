@@ -40,7 +40,7 @@ deletes · event-driven query lifecycle with an inline correspondence
 ledger · closed-door and closed-agent warnings · reminders with due
 badges and snooze · jsonb genre filtering (GIN-indexed on Postgres) ·
 server-side whitelisted sorting · Sanctum SPA cookie auth with profile
-management and full password recovery (Mailpit dev mailbox) · 43 feature
+management and full password recovery (Mailpit dev mailbox) · 45 feature
 tests on a hermetic sqlite `:memory:` database.
 
 ## Stack
@@ -77,6 +77,21 @@ The target injects the test environment at `docker-compose exec` time —
 container-provided env reaches PHP via `$_SERVER` and outranks
 `phpunit.xml` overrides. Tests are structurally incapable of touching
 the dev database. CI runs the identical environment.
+
+## Production build
+
+```bash
+make prod-build
+make prod-key      # once — put the printed key as APP_KEY= in your root .env
+make prod-up
+```
+
+Baked immutable images under an isolated compose project: nginx serves
+the compiled SPA with immutable asset caching and fastcgis `/api` +
+`/sanctum` to php-fpm running cached config and routes. No bind mounts,
+no Vite, no Mailpit — dev tooling doesn't exist here, and dev data is
+untouched. CI builds both production images on every push so the path
+can't silently rot.
 
 ## Architecture notes
 
@@ -117,9 +132,7 @@ Documented because they're the instructive kind:
 
 ## Roadmap
 
-Stats dashboard (response times and request rates from the event
-stream) · query-letter template management · production static build
-behind nginx · live deployment.
+Live deployment — everything before it now exists.
 
 ---
 

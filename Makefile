@@ -130,6 +130,26 @@ frontend-rebuild:
 	docker-compose build react
 	docker-compose up -d --force-recreate --renew-anon-volumes react
 
+# ── Production (baked images, isolated project + volumes) ──
+PROD_COMPOSE = docker-compose -f docker-compose.prod.yml -p manuscript_tracker_prod
+
+prod-build:
+	$(PROD_COMPOSE) build
+
+prod-key:
+	$(PROD_COMPOSE) run --rm --no-deps --entrypoint "" laravel php artisan key:generate --show
+
+prod-up:
+	$(PROD_COMPOSE) up -d
+	@echo ""
+	@echo "Production stack up: http://localhost:$${NGINX_PORT:-80}"
+
+prod-down:
+	$(PROD_COMPOSE) down
+
+prod-logs:
+	$(PROD_COMPOSE) logs -f --tail=100
+
 npm-build:
 	docker-compose exec react npm run build
 

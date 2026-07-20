@@ -1,0 +1,12 @@
+# Keep build contexts small and secrets out of images.
+.git
+.github
+docs
+**/node_modules
+frontend/dist
+backend/vendor
+backend/.env*
+!backend/.env.example
+*.md
+backend/bootstrap/cache
+backend/storage

@@ -1,0 +1,113 @@
+# Production topology — deliberately standalone, not an override:
+# baked immutable images, zero bind mounts, none of the dev tooling
+# (Vite, Mailpit, adminer, pgadmin). Runs under its own compose project
+# so volumes and networks never collide with the dev stack:
+#
+#   make prod-build
+#   make prod-key        # once: prints an APP_KEY for your root .env
+#   make prod-up
+#
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-manuscript_tracker}
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres_dev_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-postgres} -d ${DB_DATABASE:-manuscript_tracker}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --requirepass ${REDIS_PASSWORD:-redis_dev_password} --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a ${REDIS_PASSWORD:-redis_dev_password} ping | grep PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  laravel:
+    build:
+      context: .
+      dockerfile: docker/laravel-dockerfile
+      target: production
+      args:
+        PHP_VERSION: "8.4"
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+      # Set APP_KEY in your root .env (make prod-key generates one).
+      # Without it the entrypoint mints an ephemeral key per container —
+      # fine for a smoke test, session-destroying for anything real.
+      APP_KEY: ${APP_KEY:-}
+      APP_URL: http://localhost:${NGINX_PORT:-80}
+      SANCTUM_STATEFUL_DOMAINS: localhost,localhost:${NGINX_PORT:-80},127.0.0.1,127.0.0.1:${NGINX_PORT:-80}
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: ${DB_DATABASE:-manuscript_tracker}
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres_dev_password}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_dev_password}
+      SESSION_DRIVER: redis
+      CACHE_STORE: redis
+      QUEUE_CONNECTION: redis
+      MAIL_MAILER: ${MAIL_MAILER:-log}
+      MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-noreply@manuscripttracker.local}
+      MAIL_FROM_NAME: "Manuscript Tracker"
+      SEED_DATABASE: ${SEED_DATABASE:-false}
+    healthcheck:
+      test: ["CMD-SHELL", "pidof php-fpm || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  nginx:
+    build:
+      context: .
+      dockerfile: docker/nginx-prod.dockerfile
+    ports:
+      - "${NGINX_PORT:-80}:80"
+    depends_on:
+      laravel:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+    restart: unless-stopped
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:

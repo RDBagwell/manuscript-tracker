@@ -56,9 +56,13 @@ chown -R www-data:www-data storage bootstrap/cache
 # the file, not process env: compose no longer injects APP_KEY, and a
 # file check means the key survives restarts instead of rotating.
 if [ ! -f /app/.env ]; then
-    cp /app/.env.example /app/.env
+    if [ -f /app/.env.example ]; then
+        cp /app/.env.example /app/.env
+    else
+        echo "APP_KEY=" > /app/.env
+    fi
 fi
-if ! grep -qE '^APP_KEY=base64:.{40,}' /app/.env; then
+if [ -z "$APP_KEY" ] && ! grep -qE '^APP_KEY=base64:.{40,}' /app/.env; then
     echo -e "${YELLOW}Generating APP_KEY...${NC}"
     php artisan key:generate --force
     echo -e "${GREEN}APP_KEY generated${NC}"
@@ -73,12 +77,13 @@ else
     echo -e "${RED}Migration failed, but continuing...${NC}"
 fi
 
-# Seed database if needed (optional, comment out if not needed initially)
-# if [ "$SEED_DATABASE" = "true" ]; then
-#     echo -e "${YELLOW}Seeding database...${NC}"
-#     php artisan db:seed
-#     echo -e "${GREEN}Database seeded${NC}"
-# fi
+# Opt-in seeding (SEED_DATABASE=true). --force: Laravel prompts and
+# hangs in production without it.
+if [ "$SEED_DATABASE" = "true" ]; then
+    echo -e "${YELLOW}Seeding database...${NC}"
+    php artisan db:seed --force
+    echo -e "${GREEN}Database seeded${NC}"
+fi
 
 # Cache config and routes for performance
 if [ "$APP_ENV" != "local" ]; then
@@ -89,10 +94,14 @@ if [ "$APP_ENV" != "local" ]; then
     echo -e "${GREEN}Cache completed${NC}"
 fi
 
-# Clear any stale cache
-echo -e "${YELLOW}Clearing cache...${NC}"
-php artisan cache:clear
-php artisan config:clear
+# Dev only: clear stale caches for a fresh boot. In production this
+# would wipe the config/route caches built moments ago — the classic
+# cache-then-clear self-own.
+if [ "$APP_ENV" = "local" ]; then
+    echo -e "${YELLOW}Clearing cache...${NC}"
+    php artisan cache:clear
+    php artisan config:clear
+fi
 
 echo -e "${GREEN}=== Laravel Ready ===${NC}"
 
