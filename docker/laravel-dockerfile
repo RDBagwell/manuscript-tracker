@@ -1,12 +1,16 @@
 # syntax=docker/dockerfile:1.4
 
 ARG PHP_VERSION=8.4
+# Extensions compiled from GitHub release tarballs, not PECL — pecl.php.net
+# 504s took down a CI build. Pinned versions; bump deliberately.
+ARG PHPREDIS_VERSION=6.2.0
+ARG XDEBUG_VERSION=3.4.2
 
 # ===== BUILD STAGE =====
 FROM php:${PHP_VERSION}-fpm-alpine AS builder
 
 # Install system dependencies. build-base provides the compiler; autoconf is
-# required by phpize (used by `pecl install`). libpq-dev headers build pdo_pgsql.
+# required by phpize (extensions build from source). libpq-dev headers build pdo_pgsql.
 RUN apk add --no-cache \
     build-base \
     autoconf \
@@ -21,8 +25,13 @@ RUN apk add --no-cache \
 # (pdo, ctype, mbstring, tokenizer, opcache and json ship with php:8.2-alpine.)
 RUN docker-php-ext-install pdo_pgsql bcmath
 
-# Install Redis extension
-RUN pecl install redis && docker-php-ext-enable redis
+# Redis extension from source (see ARG note up top)
+ARG PHPREDIS_VERSION
+RUN curl -fsSL https://github.com/phpredis/phpredis/archive/refs/tags/${PHPREDIS_VERSION}.tar.gz | tar xz -C /tmp \
+    && cd /tmp/phpredis-${PHPREDIS_VERSION} \
+    && phpize && ./configure && make -j$(nproc) install \
+    && docker-php-ext-enable redis \
+    && cd / && rm -rf /tmp/phpredis-${PHPREDIS_VERSION}
 
 # Copy Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -59,8 +68,19 @@ RUN apk add --no-cache \
 # Only pdo_pgsql and bcmath need building; the rest ship with the base image
 RUN docker-php-ext-install pdo_pgsql bcmath
 
-RUN pecl install redis xdebug && \
-    docker-php-ext-enable redis xdebug
+ARG PHPREDIS_VERSION
+RUN curl -fsSL https://github.com/phpredis/phpredis/archive/refs/tags/${PHPREDIS_VERSION}.tar.gz | tar xz -C /tmp \
+    && cd /tmp/phpredis-${PHPREDIS_VERSION} \
+    && phpize && ./configure && make -j$(nproc) install \
+    && docker-php-ext-enable redis \
+    && cd / && rm -rf /tmp/phpredis-${PHPREDIS_VERSION}
+
+ARG XDEBUG_VERSION
+RUN curl -fsSL https://github.com/xdebug/xdebug/archive/refs/tags/${XDEBUG_VERSION}.tar.gz | tar xz -C /tmp \
+    && cd /tmp/xdebug-${XDEBUG_VERSION} \
+    && phpize && ./configure && make -j$(nproc) install \
+    && docker-php-ext-enable xdebug \
+    && cd / && rm -rf /tmp/xdebug-${XDEBUG_VERSION}
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
@@ -103,10 +123,14 @@ RUN apk add --no-cache \
     redis
 
 # Build extensions using throwaway build deps, then remove them to keep the image slim
-RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS libpq-dev \
+ARG PHPREDIS_VERSION
+RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS libpq-dev curl \
     && docker-php-ext-install pdo_pgsql bcmath \
-    && pecl install redis \
+    && curl -fsSL https://github.com/phpredis/phpredis/archive/refs/tags/${PHPREDIS_VERSION}.tar.gz | tar xz -C /tmp \
+    && cd /tmp/phpredis-${PHPREDIS_VERSION} \
+    && phpize && ./configure && make -j$(nproc) install \
     && docker-php-ext-enable redis \
+    && cd / && rm -rf /tmp/phpredis-${PHPREDIS_VERSION} \
     && apk del .build-deps
 
 # Optimized PHP config for production
