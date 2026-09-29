@@ -19,7 +19,6 @@ docker-compose.override.yml
 
 # PHP/Laravel
 backend/vendor/
-backend/composer.lock
 backend/.env
 backend/.env.local
 backend/storage/logs/*
@@ -29,9 +28,6 @@ backend/storage/framework/views/*
 backend/bootstrap/cache/*
 backend/.php_cs.cache
 backend/.phpunit.result.cache
-backend/node_modules/
-backend/npm-debug.log
-backend/yarn-error.log
 
 # Node/React
 frontend/node_modules/
@@ -39,16 +35,15 @@ frontend/npm-debug.log
 frontend/yarn-error.log
 frontend/yarn.lock
 frontend/.env.local
-frontend/build/
 frontend/dist/
-frontend/.next/
-frontend/out/
 
 # Testing
 backend/tests/coverage/
 frontend/coverage/
+frontend/test-results/
+frontend/playwright-report/
 
-# Documentation
+# Keys & certificates
 *.pem
 *.key
 

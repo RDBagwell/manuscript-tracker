@@ -1,21 +1,7 @@
 # syntax=docker/dockerfile:1.4
 
-ARG NODE_ENV=development
-
-# ===== BUILD STAGE =====
-FROM node:20-alpine AS builder
-
-WORKDIR /app
-
-COPY frontend/package.json frontend/package-lock.json ./
-
-RUN npm ci
-
-COPY frontend/ .
-
-RUN npm run build
-
-# ===== DEVELOPMENT STAGE =====
+# Development only: the Vite dev server behind the dev nginx. Production
+# compiles the SPA inside docker/nginx-prod.dockerfile instead.
 FROM node:20-alpine AS development
 
 WORKDIR /app
@@ -29,20 +15,3 @@ COPY frontend/ .
 EXPOSE 3000
 
 CMD ["npm", "run", "dev"]
-
-# ===== PRODUCTION STAGE =====
-FROM node:20-alpine AS production
-
-RUN npm install -g serve
-
-WORKDIR /app
-
-COPY frontend/package.json frontend/package-lock.json ./
-
-RUN npm ci --only=production
-
-COPY --from=builder /app/dist ./dist
-
-EXPOSE 3000
-
-CMD ["serve", "-s", "dist", "-l", "3000"]
