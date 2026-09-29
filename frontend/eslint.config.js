@@ -18,7 +18,7 @@ export default defineConfig([
       parserOptions: {
         projectService: {
           // Tooling configs sit outside tsconfig's `src` include.
-          allowDefaultProject: ['vite.config.ts', 'playwright.config.ts'],
+          allowDefaultProject: ['vite.config.ts', 'playwright.config.ts', 'e2e/*.ts'],
         },
         tsconfigRootDir: import.meta.dirname,
       },

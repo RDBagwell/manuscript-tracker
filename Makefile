@@ -1,4 +1,4 @@
-.PHONY: frontend-rebuild help build up down logs clean restart shell artisan test lint format seed
+.PHONY: frontend-rebuild demo-capture help build up down logs clean restart shell artisan test lint format seed
 
 help:
 	@echo "Manuscript Tracker - Docker Commands"
@@ -29,6 +29,7 @@ help:
 	@echo "  make test               Run PHP tests"
 	@echo "  make lint               Run linting tools"
 	@echo "  make format             Format code"
+	@echo "  make demo-capture       Re-seed, then capture screenshots + video"
 	@echo ""
 	@echo "Database:"
 	@echo "  make psql               Connect to PostgreSQL shell"
@@ -129,6 +130,12 @@ npm-install:
 frontend-rebuild:
 	docker-compose build react
 	docker-compose up -d --force-recreate --renew-anon-volumes react
+
+# Screenshots + walkthrough video into docs/screenshots/, driven by
+# Playwright on the host against the running, seeded stack. Resets the
+# demo data first so the capture always starts from the seed.
+demo-capture: fresh
+	cd frontend && npx playwright install chromium && npm run demo:capture
 
 # ── Production (baked images, isolated project + volumes) ──
 PROD_COMPOSE = docker-compose -f docker-compose.prod.yml -p manuscript_tracker_prod
