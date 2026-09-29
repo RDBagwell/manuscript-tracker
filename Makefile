@@ -132,12 +132,17 @@ frontend-rebuild:
 
 # ── Production (baked images, isolated project + volumes) ──
 PROD_COMPOSE = docker-compose -f docker-compose.prod.yml -p manuscript_tracker_prod
+# The prod compose file has no secret fallbacks (${VAR:?}), and compose
+# interpolates the whole file for every command. Building and minting a
+# key need no secrets, so these two targets satisfy interpolation with
+# inert placeholders; `prod-up` still refuses to start without real ones.
+PROD_COMPOSE_NO_SECRETS = APP_KEY=unused DB_PASSWORD=unused REDIS_PASSWORD=unused $(PROD_COMPOSE)
 
 prod-build:
-	$(PROD_COMPOSE) build
+	$(PROD_COMPOSE_NO_SECRETS) build
 
 prod-key:
-	$(PROD_COMPOSE) run --rm --no-deps --entrypoint "" laravel php artisan key:generate --show
+	$(PROD_COMPOSE_NO_SECRETS) run --rm --no-deps --entrypoint "" laravel php artisan key:generate --show
 
 prod-up:
 	$(PROD_COMPOSE) up -d
