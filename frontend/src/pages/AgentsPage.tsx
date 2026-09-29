@@ -2,14 +2,12 @@ import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import api from '../services/api'
 import AgentForm from '../components/AgentForm'
+import { useFetch } from '../hooks/useFetch'
 import type { Agency, Agent, Wrapped } from '../types'
 
 export default function AgentsPage() {
-  const [agents, setAgents] = useState<Agent[]>([])
   const [genre, setGenre] = useState('')
   const [applied, setApplied] = useState('')
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [agencies, setAgencies] = useState<Agency[]>([])
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<Agent | null>(null)
@@ -21,17 +19,13 @@ export default function AgentsPage() {
       .catch(() => { /* agent list still works without the picker */ })
   }, [])
 
-  useEffect(() => {
-    setLoading(true)
-    setError(null)
-    const [field, dir] = sort.split(':')
-    const params = new URLSearchParams({ sort: field, dir })
-    if (applied) params.set('genre', applied)
-    api.get<Wrapped<Agent[]>>(`/agents?${params}`)
-      .then((res) => setAgents(res.data))
-      .catch(() => setError('Could not load agents.'))
-      .finally(() => setLoading(false))
-  }, [applied, sort])
+  const [field, dir] = sort.split(':')
+  const params = new URLSearchParams({ sort: field, dir })
+  if (applied) params.set('genre', applied)
+  const {
+    data: agents, setData: setAgents, loading, failed,
+  } = useFetch<Agent[]>(`/agents?${params}`, [])
+  const error = failed ? 'Could not load agents.' : null
 
   function handleFilter(e: FormEvent) {
     e.preventDefault()

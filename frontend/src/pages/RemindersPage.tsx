@@ -2,16 +2,14 @@ import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import api, { ApiError } from '../services/api'
 import { useToast } from '../components/Toasts'
+import { useFetch } from '../hooks/useFetch'
 import { formatDate } from '../types'
 import type { Agent, Manuscript, Query, Reminder, Wrapped } from '../types'
 
 type Filter = 'pending' | 'completed'
 
 export default function RemindersPage() {
-  const [reminders, setReminders] = useState<Reminder[]>([])
   const [filter, setFilter] = useState<Filter>('pending')
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [showNew, setShowNew] = useState(false)
 
   const [manuscripts, setManuscripts] = useState<Manuscript[]>([])
@@ -32,14 +30,10 @@ export default function RemindersPage() {
       .catch(() => { /* create form degrades; list still works */ })
   }, [])
 
-  useEffect(() => {
-    setLoading(true)
-    setError(null)
-    api.get<Wrapped<Reminder[]>>(`/reminders?filter=${filter}`)
-      .then((res) => setReminders(res.data))
-      .catch(() => setError('Could not load reminders.'))
-      .finally(() => setLoading(false))
-  }, [filter])
+  const {
+    data: reminders, setData: setReminders, loading, failed,
+  } = useFetch<Reminder[]>(`/reminders?filter=${filter}`, [])
+  const error = failed ? 'Could not load reminders.' : null
 
   function replace(updated: Reminder) {
     setReminders((prev) => prev.map((r) => (r.id === updated.id ? updated : r)))

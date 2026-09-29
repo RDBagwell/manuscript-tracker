@@ -60,6 +60,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
+// The hook shares this module's private context with <AuthProvider>.
+// Fast Refresh falls back to a full reload when this file changes — a
+// fair price for not exporting the raw context object.
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth(): AuthValue {
   const ctx = useContext(AuthContext)
   if (!ctx) throw new Error('useAuth must be used inside <AuthProvider>')

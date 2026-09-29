@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
@@ -25,5 +26,13 @@ export default defineConfig({
   },
   preview: {
     port: 3000,
+  },
+  // Unit/component tests run in jsdom with the network mocked at the
+  // services/api.ts boundary (see src/test/api.ts) — no server needed.
+  test: {
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.ts'],
+    include: ['src/**/*.test.{ts,tsx}'],
+    restoreMocks: true,
   },
 })

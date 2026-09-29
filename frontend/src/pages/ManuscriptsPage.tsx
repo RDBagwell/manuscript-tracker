@@ -1,25 +1,19 @@
-import { useEffect, useState } from 'react'
-import api from '../services/api'
+import { useState } from 'react'
 import ManuscriptForm from '../components/ManuscriptForm'
+import { useFetch } from '../hooks/useFetch'
 import { MANUSCRIPT_STATUS_LABELS } from '../types'
-import type { Manuscript, Wrapped } from '../types'
+import type { Manuscript } from '../types'
 
 export default function ManuscriptsPage() {
-  const [manuscripts, setManuscripts] = useState<Manuscript[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<Manuscript | null>(null)
   const [sort, setSort] = useState('created_at:desc')
 
-  useEffect(() => {
-    setLoading(true)
-    const [field, dir] = sort.split(':')
-    api.get<Wrapped<Manuscript[]>>(`/manuscripts?sort=${field}&dir=${dir}`)
-      .then((res) => setManuscripts(res.data))
-      .catch(() => setError('Could not load manuscripts.'))
-      .finally(() => setLoading(false))
-  }, [sort])
+  const [field, dir] = sort.split(':')
+  const {
+    data: manuscripts, setData: setManuscripts, loading, failed,
+  } = useFetch<Manuscript[]>(`/manuscripts?sort=${field}&dir=${dir}`, [])
+  const error = failed ? 'Could not load manuscripts.' : null
 
   return (
     <div className="page">

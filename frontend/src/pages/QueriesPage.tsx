@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import api, { ApiError } from '../services/api'
 import StatusBadge from '../components/StatusBadge'
+import { useFetch } from '../hooks/useFetch'
 import {
   EVENT_TYPE_LABELS, QUERY_STATUS_LABELS, formatDate,
 } from '../types'
@@ -14,11 +15,9 @@ const EVENT_TYPES = Object.keys(EVENT_TYPE_LABELS) as QueryEventType[]
 const STATUSES = Object.keys(QUERY_STATUS_LABELS) as QueryStatus[]
 
 export default function QueriesPage() {
-  const [queries, setQueries] = useState<Query[]>([])
   const [manuscripts, setManuscripts] = useState<Manuscript[]>([])
   const [agents, setAgents] = useState<Agent[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [refsError, setRefsError] = useState<string | null>(null)
   const [warnings, setWarnings] = useState<string[]>([])
   const [expandedId, setExpandedId] = useState<number | null>(null)
   const [showNew, setShowNew] = useState(false)
@@ -28,18 +27,17 @@ export default function QueriesPage() {
   const [openOnly, setOpenOnly] = useState(false)
   const [sort, setSort] = useState('sent_at:desc')
 
-  const loadQueries = useCallback(async () => {
-    const params = new URLSearchParams()
-    if (manuscriptFilter) params.set('manuscript_id', manuscriptFilter)
-    if (statusFilter) params.set('status', statusFilter)
-    if (openOnly) params.set('open', '1')
-    const [field, dir] = sort.split(':')
-    params.set('sort', field)
-    params.set('dir', dir)
-    const qs = params.toString()
-    const res = await api.get<Wrapped<Query[]>>(`/queries${qs ? `?${qs}` : ''}`)
-    setQueries(res.data)
-  }, [manuscriptFilter, statusFilter, openOnly, sort])
+  const params = new URLSearchParams()
+  if (manuscriptFilter) params.set('manuscript_id', manuscriptFilter)
+  if (statusFilter) params.set('status', statusFilter)
+  if (openOnly) params.set('open', '1')
+  const [field, dir] = sort.split(':')
+  params.set('sort', field)
+  params.set('dir', dir)
+  const {
+    data: queries, setData: setQueries, loading, failed,
+  } = useFetch<Query[]>(`/queries?${params}`, [])
+  const error = failed ? 'Could not load queries.' : refsError
 
   useEffect(() => {
     Promise.all([
@@ -50,16 +48,8 @@ export default function QueriesPage() {
         setManuscripts(m.data)
         setAgents(a.data)
       })
-      .catch(() => setError('Could not load manuscripts and agents.'))
+      .catch(() => setRefsError('Could not load manuscripts and agents.'))
   }, [])
-
-  useEffect(() => {
-    setLoading(true)
-    setError(null)
-    loadQueries()
-      .catch(() => setError('Could not load queries.'))
-      .finally(() => setLoading(false))
-  }, [loadQueries])
 
   function replaceQuery(updated: Query) {
     setQueries((prev) => prev.map((q) => (q.id === updated.id ? updated : q)))
@@ -205,15 +195,19 @@ function QueryRow({
   const [full, setFull] = useState<Query | null>(
     query.events ? query : null,
   )
-  const [loadingDetail, setLoadingDetail] = useState(false)
+  const [detailFailed, setDetailFailed] = useState(false)
+
+  // Collapsing forgets a failed load, so expanding again retries it.
+  if (detailFailed && !expanded) setDetailFailed(false)
 
   useEffect(() => {
-    if (!expanded || full) return
-    setLoadingDetail(true)
+    if (!expanded || full || detailFailed) return
     api.get<Wrapped<Query>>(`/queries/${query.id}`)
       .then((res) => setFull(res.data))
-      .finally(() => setLoadingDetail(false))
-  }, [expanded, full, query.id])
+      .catch(() => setDetailFailed(true))
+  }, [expanded, full, detailFailed, query.id])
+
+  const loadingDetail = expanded && !full && !detailFailed
 
   const detail = full ?? query
 

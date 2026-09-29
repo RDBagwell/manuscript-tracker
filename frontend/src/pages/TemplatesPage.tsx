@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import api, { ApiError } from '../services/api'
 import { useToast } from '../components/Toasts'
+import { useFetch } from '../hooks/useFetch'
 import { TEMPLATE_TYPE_LABELS, formatDate } from '../types'
 import type { Manuscript, Template, TemplateType, Wrapped } from '../types'
 
@@ -12,10 +13,7 @@ function wordCount(text: string): number {
 }
 
 export default function TemplatesPage() {
-  const [templates, setTemplates] = useState<Template[]>([])
   const [manuscripts, setManuscripts] = useState<Manuscript[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [typeFilter, setTypeFilter] = useState('')
   const [openId, setOpenId] = useState<number | 'new' | null>(null)
 
@@ -25,15 +23,11 @@ export default function TemplatesPage() {
       .catch(() => { /* picker degrades */ })
   }, [])
 
-  useEffect(() => {
-    setLoading(true)
-    setError(null)
-    const qs = typeFilter ? `?type=${typeFilter}` : ''
-    api.get<Wrapped<Template[]>>(`/templates${qs}`)
-      .then((res) => setTemplates(res.data))
-      .catch(() => setError('Could not load templates.'))
-      .finally(() => setLoading(false))
-  }, [typeFilter])
+  const qs = typeFilter ? `?type=${typeFilter}` : ''
+  const {
+    data: templates, setData: setTemplates, loading, failed,
+  } = useFetch<Template[]>(`/templates${qs}`, [])
+  const error = failed ? 'Could not load templates.' : null
 
   const sorted = useMemo(() => templates, [templates])
 
