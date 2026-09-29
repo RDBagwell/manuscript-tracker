@@ -2,9 +2,6 @@
 
 namespace App\Models;
 
-use App\Models\Agent;
-use App\Models\Manuscript;
-use App\Models\Query;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

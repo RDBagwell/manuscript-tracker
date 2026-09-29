@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\QueryEventType;
 use App\Enums\QueryStatus;
+use App\Http\Controllers\Concerns\AppliesSorting;
 use App\Http\Requests\StoreQueryRequest;
 use App\Http\Requests\UpdateQueryRequest;
 use App\Http\Resources\QueryResource;
@@ -15,7 +16,7 @@ use Illuminate\Http\Response;
 
 class QueryController extends Controller
 {
-    use \App\Http\Controllers\Concerns\AppliesSorting;
+    use AppliesSorting;
 
     public function index(Request $request): AnonymousResourceCollection
     {

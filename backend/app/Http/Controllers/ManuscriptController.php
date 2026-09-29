@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\AppliesSorting;
 use App\Http\Requests\StoreManuscriptRequest;
 use App\Http\Requests\UpdateManuscriptRequest;
 use App\Http\Resources\ManuscriptResource;
@@ -13,7 +14,7 @@ use Illuminate\Http\Response;
 
 class ManuscriptController extends Controller
 {
-    use \App\Http\Controllers\Concerns\AppliesSorting;
+    use AppliesSorting;
 
     public function index(Request $request): AnonymousResourceCollection
     {

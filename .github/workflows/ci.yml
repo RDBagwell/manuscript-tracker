@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   backend:
-    name: Backend — Laravel test suite
+    name: Backend — Pint + Laravel test suite
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -30,6 +30,9 @@ jobs:
       - uses: ramsey/composer-install@v3
         with:
           working-directory: backend
+
+      - name: Code style (Pint)
+        run: composer run lint
 
       # Identical environment to `make test` — the hermetic set that
       # $_SERVER precedence taught us to inject explicitly.

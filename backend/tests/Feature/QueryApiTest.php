@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\QueryEventType;
 use App\Enums\QueryStatus;
 use App\Models\Agency;
 use App\Models\Agent;
@@ -113,8 +114,8 @@ class QueryApiTest extends TestCase
             'manuscript_id' => $manuscript->id,
             'agent_id' => $colleagueWhoPassed->id,
         ]);
-        $rejected->recordEvent(\App\Enums\QueryEventType::Sent);
-        $rejected->recordEvent(\App\Enums\QueryEventType::RejectedForm);
+        $rejected->recordEvent(QueryEventType::Sent);
+        $rejected->recordEvent(QueryEventType::RejectedForm);
 
         $response = $this->postJson('/api/queries', [
             'manuscript_id' => $manuscript->id,

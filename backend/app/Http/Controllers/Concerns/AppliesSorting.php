@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Concerns;
 
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
 
 trait AppliesSorting
@@ -11,9 +13,9 @@ trait AppliesSorting
      * fields silently fall back to the default — sorting is a
      * convenience, not a contract worth a 422.
      *
-     * @param  \Illuminate\Database\Eloquent\Builder|\Illuminate\Database\Eloquent\Relations\Relation  $query
+     * @param  Builder|Relation  $query
      * @param  list<string>  $allowed
-     * @return \Illuminate\Database\Eloquent\Builder|\Illuminate\Database\Eloquent\Relations\Relation
+     * @return Builder|Relation
      */
     protected function applySort(
         $query,
