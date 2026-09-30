@@ -68,7 +68,7 @@ deletes · event-driven query lifecycle with an inline correspondence
 ledger · closed-door and closed-agent warnings · reminders with due
 badges and snooze · jsonb genre filtering (GIN-indexed on Postgres) ·
 server-side whitelisted sorting · Sanctum SPA cookie auth with profile
-management and full password recovery (Mailpit dev mailbox) · 77 back-end
+management and full password recovery (Mailpit dev mailbox) · 81 back-end
 tests on a hermetic sqlite `:memory:` database, plus Vitest + Testing
 Library on the front end.
 
