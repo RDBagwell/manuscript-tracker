@@ -104,7 +104,7 @@ docker-compose exec -T postgres psql -U postgres manuscript_tracker < backup.sql
 
 ## Testing and linting
 
-**Back end.** `make test` runs PHPUnit inside the container: 58 feature
+**Back end.** `make test` runs PHPUnit inside the container: 59 feature
 tests and 23 unit tests on sqlite `:memory:`. The target injects the test
 environment at exec time because compose-provided env reaches PHP via
 `$_SERVER` and outranks `phpunit.xml`, so the suite cannot touch the dev

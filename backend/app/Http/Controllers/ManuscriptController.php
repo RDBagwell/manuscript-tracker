@@ -31,6 +31,9 @@ class ManuscriptController extends Controller
     public function store(StoreManuscriptRequest $request): JsonResponse
     {
         $manuscript = $request->user()->manuscripts()->create($request->validated());
+        // Omitted category/status take their database defaults, which only
+        // exist on the model after a reload.
+        $manuscript->refresh();
 
         return ManuscriptResource::make($manuscript)->response()->setStatusCode(201);
     }

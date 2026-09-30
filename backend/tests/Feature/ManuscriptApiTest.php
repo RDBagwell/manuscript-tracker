@@ -104,14 +104,12 @@ class ManuscriptApiTest extends TestCase
         Manuscript::factory()->create(['title' => 'SHARED TITLE']);
         Sanctum::actingAs($me);
 
-        $payload = ['category' => 'adult', 'status' => 'drafting'];
-
-        $this->postJson('/api/manuscripts', ['title' => 'UNRESOLVED', ...$payload])
+        $this->postJson('/api/manuscripts', ['title' => 'UNRESOLVED'])
             ->assertUnprocessable()
             ->assertJsonValidationErrors('title');
 
         // Another author's title doesn't collide.
-        $this->postJson('/api/manuscripts', ['title' => 'SHARED TITLE', ...$payload])->assertCreated();
+        $this->postJson('/api/manuscripts', ['title' => 'SHARED TITLE'])->assertCreated();
     }
 
     public function test_update_may_keep_its_own_title_but_not_take_a_siblings(): void
@@ -127,5 +125,15 @@ class ManuscriptApiTest extends TestCase
         $this->putJson("/api/manuscripts/{$manuscript->id}", ['title' => 'IT COMES BACK'])
             ->assertUnprocessable()
             ->assertJsonValidationErrors('title');
+    }
+
+    public function test_store_fills_database_defaults_for_omitted_fields(): void
+    {
+        Sanctum::actingAs(User::factory()->create());
+
+        $this->postJson('/api/manuscripts', ['title' => 'BARE TITLE'])
+            ->assertCreated()
+            ->assertJsonPath('data.category', 'adult')
+            ->assertJsonPath('data.status', 'drafting');
     }
 }
