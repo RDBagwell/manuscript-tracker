@@ -35,6 +35,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   )
 }
 
+// Same trade as useAuth: the hook and provider share a private context.
+// eslint-disable-next-line react-refresh/only-export-components
 export function useToast(): (message: string) => void {
   const push = useContext(ToastContext)
   if (!push) throw new Error('useToast must be used inside <ToastProvider>')

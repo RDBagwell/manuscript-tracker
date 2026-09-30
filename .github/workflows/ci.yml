@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   backend:
-    name: Backend — Laravel test suite
+    name: Backend — Pint + Laravel test suite
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -31,6 +31,9 @@ jobs:
         with:
           working-directory: backend
 
+      - name: Code style (Pint)
+        run: composer run lint
+
       # Identical environment to `make test` — the hermetic set that
       # $_SERVER precedence taught us to inject explicitly.
       - name: Run test suite
@@ -46,7 +49,7 @@ jobs:
         run: php artisan test
 
   frontend:
-    name: Frontend — typecheck + build
+    name: Frontend — lint + test + build
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -62,17 +65,41 @@ jobs:
 
       - run: npm ci
 
+      # Type-aware ESLint (typescript-eslint, react-hooks, react-refresh),
+      # zero warnings allowed.
+      - run: npm run lint
+
+      # Vitest + Testing Library in jsdom; the api client is mocked, so no
+      # server is involved.
+      - run: npm test
+
       # 'build' is `tsc --noEmit && vite build` — strict types are the gate.
       - run: npm run build
 
   prod-images:
-    name: Prod images — build check
+    name: Prod images — build + header check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+
+      # No dev-password fallbacks in production: the file must refuse to
+      # interpolate without secrets, and accept it once they're present.
+      - name: Prod compose requires secrets
+        run: |
+          if docker compose -f docker-compose.prod.yml config -q 2>/dev/null; then
+            echo "docker-compose.prod.yml interpolated without secrets" >&2
+            exit 1
+          fi
+          APP_KEY=x DB_PASSWORD=x REDIS_PASSWORD=x docker compose -f docker-compose.prod.yml config -q
 
       - name: Laravel production image
         run: docker build -f docker/laravel-dockerfile --target production --build-arg PHP_VERSION=8.4 -t mt-laravel:prod .
 
       - name: nginx + SPA production image
         run: docker build -f docker/nginx-prod.dockerfile -t mt-nginx:prod .
+
+      # Runs the image and curls the SPA shell, a hashed asset, /health and
+      # /api (a 502 here — no php-fpm) to prove every response carries the
+      # security headers, including through nginx's add_header inheritance.
+      - name: nginx security headers
+        run: docker/check-security-headers.sh mt-nginx:prod

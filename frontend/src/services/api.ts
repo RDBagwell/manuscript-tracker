@@ -6,6 +6,11 @@ const API_BASE_URL = import.meta.env.VITE_API_URL?.trim() || '/api'
 // (Empty string for relative bases — the fetch below stays relative.)
 const APP_ORIGIN = API_BASE_URL.replace(/\/api\/?$/, '')
 
+interface ErrorBody {
+  message?: string
+  errors?: Record<string, string[]>
+}
+
 export class ApiError extends Error {
   status: number
   errors?: Record<string, string[]>
@@ -68,9 +73,9 @@ async function request<T>(
   }
 
   if (!response.ok) {
-    let body: { message?: string; errors?: Record<string, string[]> } | null = null
+    let body: ErrorBody | null = null
     try {
-      body = await response.json()
+      body = (await response.json()) as ErrorBody
     } catch {
       // non-JSON error body; fall through to statusText
     }
@@ -81,7 +86,7 @@ async function request<T>(
     )
   }
 
-  return response.status === 204 ? (undefined as T) : response.json()
+  return response.status === 204 ? (undefined as T) : (response.json() as Promise<T>)
 }
 
 export const api = {

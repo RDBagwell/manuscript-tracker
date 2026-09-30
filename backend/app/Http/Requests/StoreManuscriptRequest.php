@@ -12,7 +12,10 @@ class StoreManuscriptRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'title' => ['required', 'string', 'max:255'],
+            'title' => [
+                'required', 'string', 'max:255',
+                Rule::unique('manuscripts', 'title')->where('user_id', $this->user()->id),
+            ],
             'genre' => ['nullable', 'string', 'max:255'],
             'category' => ['sometimes', Rule::enum(ManuscriptCategory::class)],
             'word_count' => ['nullable', 'integer', 'min:0'],

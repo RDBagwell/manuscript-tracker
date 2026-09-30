@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\AppliesSorting;
 use App\Http\Requests\StoreAgentRequest;
 use App\Http\Requests\UpdateAgentRequest;
 use App\Http\Resources\AgentResource;
@@ -13,7 +14,7 @@ use Illuminate\Http\Response;
 
 class AgentController extends Controller
 {
-    use \App\Http\Controllers\Concerns\AppliesSorting;
+    use AppliesSorting;
 
     /**
      * Supports ?genre=noir filtering — jsonb containment (GIN-indexed on

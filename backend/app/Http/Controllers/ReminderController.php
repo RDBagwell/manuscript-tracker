@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateReminderRequest;
 use App\Http\Resources\ReminderResource;
 use App\Models\Query;
 use App\Models\Reminder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\JsonResponse;
@@ -58,7 +59,7 @@ class ReminderController extends Controller
     {
         $validated = $request->validated();
 
-        /** @var class-string<\Illuminate\Database\Eloquent\Model> $class */
+        /** @var class-string<Model> $class */
         $class = Relation::getMorphedModel($validated['remindable_type']);
 
         // Ownership already validated by the request's exists-where rule.

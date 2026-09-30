@@ -1,0 +1,3 @@
+# Kept on purpose: the API ships no views of its own (mail uses the
+# framework's), but `php artisan view:cache` — run by the production
+# entrypoint under `set -e` — fails if this directory doesn't exist.

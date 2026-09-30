@@ -1,4 +1,4 @@
-.PHONY: frontend-rebuild help build up down logs clean restart shell artisan test lint format seed
+.PHONY: frontend-rebuild demo-capture help build up down logs clean restart shell artisan test lint format seed
 
 help:
 	@echo "Manuscript Tracker - Docker Commands"
@@ -29,6 +29,7 @@ help:
 	@echo "  make test               Run PHP tests"
 	@echo "  make lint               Run linting tools"
 	@echo "  make format             Format code"
+	@echo "  make demo-capture       Re-seed, then capture screenshots + video"
 	@echo ""
 	@echo "Database:"
 	@echo "  make psql               Connect to PostgreSQL shell"
@@ -130,14 +131,25 @@ frontend-rebuild:
 	docker-compose build react
 	docker-compose up -d --force-recreate --renew-anon-volumes react
 
+# Screenshots + walkthrough video into docs/screenshots/, driven by
+# Playwright on the host against the running, seeded stack. Resets the
+# demo data first so the capture always starts from the seed.
+demo-capture: fresh
+	cd frontend && npx playwright install chromium && npm run demo:capture
+
 # ── Production (baked images, isolated project + volumes) ──
 PROD_COMPOSE = docker-compose -f docker-compose.prod.yml -p manuscript_tracker_prod
+# The prod compose file has no secret fallbacks (${VAR:?}), and compose
+# interpolates the whole file for every command. Building and minting a
+# key need no secrets, so these two targets satisfy interpolation with
+# inert placeholders; `prod-up` still refuses to start without real ones.
+PROD_COMPOSE_NO_SECRETS = APP_KEY=unused DB_PASSWORD=unused REDIS_PASSWORD=unused $(PROD_COMPOSE)
 
 prod-build:
-	$(PROD_COMPOSE) build
+	$(PROD_COMPOSE_NO_SECRETS) build
 
 prod-key:
-	$(PROD_COMPOSE) run --rm --no-deps --entrypoint "" laravel php artisan key:generate --show
+	$(PROD_COMPOSE_NO_SECRETS) run --rm --no-deps --entrypoint "" laravel php artisan key:generate --show
 
 prod-up:
 	$(PROD_COMPOSE) up -d
