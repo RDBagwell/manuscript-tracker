@@ -64,7 +64,7 @@ services:
       dockerfile: docker/laravel-dockerfile
       target: development
       args:
-        PHP_VERSION: "8.4"
+        PHP_VERSION: "8.4.27"
     container_name: manuscript_tracker_api
     environment:
       APP_NAME: "Manuscript Tracker"

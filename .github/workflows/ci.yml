@@ -93,7 +93,7 @@ jobs:
           APP_KEY=x DB_PASSWORD=x REDIS_PASSWORD=x docker compose -f docker-compose.prod.yml config -q
 
       - name: Laravel production image
-        run: docker build -f docker/laravel-dockerfile --target production --build-arg PHP_VERSION=8.4 -t mt-laravel:prod .
+        run: docker build -f docker/laravel-dockerfile --target production --build-arg PHP_VERSION=8.4.27 -t mt-laravel:prod .
 
       - name: nginx + SPA production image
         run: docker build -f docker/nginx-prod.dockerfile -t mt-nginx:prod .
