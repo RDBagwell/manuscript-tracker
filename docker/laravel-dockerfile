@@ -1,6 +1,8 @@
 # syntax=docker/dockerfile:1.4
 
-ARG PHP_VERSION=8.4
+# A full patch version, so a rebuild never silently changes PHP; 8.4.27 is the
+# minimum for CVE-2026-109618/109619. Keep in sync with both compose files and CI.
+ARG PHP_VERSION=8.4.27
 
 # ===== BUILD STAGE =====
 FROM php:${PHP_VERSION}-fpm-alpine AS builder
